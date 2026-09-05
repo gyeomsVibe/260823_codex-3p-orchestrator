@@ -20,6 +20,7 @@
 - `protocol.md`: 통신·소유권·승인·실패 처리 규약
 - `tasks/`: 에이전트별 현재 작업 카드
 - `messages/relay-log.md`: Codex가 중계한 요청·응답·결정 로그
+- `dashboard.html`: C3P 발동 때 현재 프로젝트 상태를 원문에서 다시 계산해 만드는 사용자용 스냅샷
 - `chat/ROOM.md`: 사용자와 세 도구가 함께 읽는 실시간 통합 채팅 타임라인
 - `chat/<agent>.md`: 각 에이전트가 자기 발언만 추가하는 전용 채널
 - `results/`: 에이전트가 제출한 결과 문서

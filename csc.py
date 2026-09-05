@@ -694,6 +694,33 @@ def manage_broker(action: str, port: int = DEFAULT_PORT):
         else:
             print("🔴 [CSC Broker] Broker is stopped.")
 
+def activate_project(project_root: Path, timeout: float) -> dict:
+    """C3P 런타임을 발동하고 성공·실패 모두 해당 프로젝트 감시판을 남긴다."""
+    import csc_dashboard
+
+    root = project_root.resolve()
+    dashboard_root = Path(csc_dashboard.HERE).resolve()
+    if dashboard_root != root:
+        raise RuntimeError(
+            f"WORKSPACE_MISMATCH: dashboard root={dashboard_root}, activation root={root}"
+        )
+    try:
+        result = csc_runtime.activate(root, timeout=timeout)
+    except Exception:
+        try:
+            csc_dashboard.write_dashboard()
+        except Exception as dashboard_exc:
+            print(f"⚠️ [CSC Dashboard] 실패 상태 감시판 생성 실패: {dashboard_exc}", file=sys.stderr)
+        raise
+    dashboard_path = Path(csc_dashboard.write_dashboard()).resolve()
+    result["dashboard"] = {
+        "project": root.name,
+        "path": str(dashboard_path),
+        "kind": "activation_snapshot",
+    }
+    return result
+
+
 def main():
     parser = argparse.ArgumentParser(description="Codex Swarm Command (CSC) CLI v2.0")
     subparsers = parser.add_subparsers(dest="command")
@@ -753,9 +780,9 @@ def main():
     elif args.command == "activate":
         init_swarm(False)
         try:
-            result = csc_runtime.activate(Path(__file__).resolve().parent, timeout=args.timeout)
+            result = activate_project(Path(__file__).resolve().parent, timeout=args.timeout)
             print(json.dumps(result, ensure_ascii=False, indent=2))
-        except csc_runtime.ActivationError as exc:
+        except (csc_runtime.ActivationError, OSError, RuntimeError) as exc:
             print(f"❌ [CSC Activate] {exc}", file=sys.stderr)
             sys.exit(1)
     elif args.command == "roster":

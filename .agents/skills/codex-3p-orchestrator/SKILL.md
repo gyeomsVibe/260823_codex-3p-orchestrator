@@ -1,6 +1,6 @@
 ---
 name: codex-3p-orchestrator
-description: 3대 AI 도구(Codex, Claude Code, Antigravity)를 단일 지능 유기체로 묶어 작동시키는 실시간 3중 병렬 오케스트레이터 스킬. "MIA 씨2피 발동", "MIA c3p 발동", "MIA 코덱스커멘드 발동", "MIA codex커멘드 발동", "$codex-3p-orchestrator" 요청 시 활성화됩니다.
+description: 3대 AI 도구(Codex, Claude Code, Antigravity)를 단일 지능 유기체로 묶어 작동시키는 실시간 3중 병렬 오케스트레이터 스킬. "MIA 씨3피 발동", "MIA c3p 발동", "MIA 코덱스커멘드 발동", "MIA codex커멘드 발동", "$codex-3p-orchestrator" 요청 시 활성화됩니다.
 ---
 
 # 🧬 Codex 3P Orchestrator (코덱스 3P 오케스트레이터)
@@ -15,6 +15,7 @@ description: 3대 AI 도구(Codex, Claude Code, Antigravity)를 단일 지능 �
 > 4. 도구 원문과 사용자 화면을 **이원 체계**로 분리하되, 원문 경로를 항상 제공한다.
 > 5. **나쁜 소식과 미검증 항목을 먼저** 제시한다.
 > 6. 위반은 `CALL_OUT`(질타) 대상이다. 동기화 검사는 `python csc_sync.py`.
+> 7. **오류수정은 3대 AI 도구 공통으로 동시 동기화**한다. 정본과 세 플랫폼 어댑터를 같은 변경 단위로 고치고, 검증하지 못한 플랫폼은 `부분 동기화`로 보고한다.
 > **MIA 시리즈 Agent Skill 표준 규격 준수 (v2.0)**  
 > **유기체 모델**: Codex(사령부/Brain) ↔ CSC Local Broker ↔ Claude Code(Immune) + Antigravity(Hands & Eyes)
 
@@ -22,10 +23,10 @@ description: 3대 AI 도구(Codex, Claude Code, Antigravity)를 단일 지능 �
 
 ## 1. 개요 및 정체성 (Overview & Identity)
 
-본 스킬은 Codex PC 앱을 유일한 사용자 단일 소통 창구(Brain)로 삼고, 백그라운드에서 실행되는 Claude Code CLI와 Antigravity CLI/Bridge를 로컬 포트 기반 초저지연 비동기 소켓 브로커(`csc_broker.py`)로 연동하여 실시간 무병목 3중 병렬 처리를 수행합니다.
+본 스킬은 Codex PC 앱을 유일한 사용자 단일 소통 창구(Brain)로 삼고, 백그라운드에서 실행되는 Claude Code CLI와 Antigravity CLI를 로컬 비동기 소켓 브로커(`csc_broker.py`)로 연동합니다. Bridge는 브라우저·도구 연동이 필요한 작업의 선택적 보조 수단이며 기본 통신 경로가 아닙니다.
 
 ### 🎯 트리거 계약 (Trigger Contract)
-- **명시적 호출문**: `"MIA 씨2피 발동"`, `"MIA c3p 발동"`, `"MIA 코덱스커멘드 발동"`, `"MIA codex커멘드 발동"`, `"$codex-3p-orchestrator"`
+- **명시적 호출문**: `"MIA 씨3피 발동"`, `"MIA c3p 발동"`, `"MIA 코덱스커멘드 발동"`, `"MIA codex커멘드 발동"`, `"$codex-3p-orchestrator"`
 - **자연어 감지**: "3대 AI 도구 오케스트레이션", "코덱스 사령관 모드", "3자 병렬 유기체 가동"
 
 ---
@@ -36,7 +37,7 @@ description: 3대 AI 도구(Codex, Claude Code, Antigravity)를 단일 지능 �
 |---|---|---|---|
 | **Codex** | **PC App (GUI)** | **사령부 (Brain)**: 목표 분해, 외부 소통, 통합 판정, 사용자 단일 보고 | 기획, 아키텍처, 사용자 승인 중계 |
 | **Claude Code** | **CLI (Background)** | **면역계 (Immune)**: 핵심 로직 구현, 자가 치유, 결함 방어, 면역력 검증 | 핵심 백엔드/알고리즘 구현, 단위 테스트 |
-| **Antigravity** | **CLI / Bridge** | **감각기 및 손발 (Eyes & Hands)**: 외부 탐색, 실측 시각 검증, QA/테스트 | 웹/브라우저 검증, 정적 린트, Exit Code 실측 |
+| **Antigravity** | **CLI (Background)** | **감각기 및 손발 (Eyes & Hands)**: 외부 탐색, 실측 시각 검증, QA/테스트 | 웹/브라우저 검증, 정적 린트, Exit Code 실측 |
 
 ---
 
@@ -111,13 +112,15 @@ sequenceDiagram
 트리거를 받으면 문서상의 연결을 가정하지 말고 프로젝트 루트에서 아래 순서로 실측한다.
 
 1. `python csc.py activate --timeout 15`로 브로커와 두 경량 어댑터를 시작하거나 재사용한다.
+   - **C3P 발동 시 현재 프로젝트 전용 `.agent-swarm/dashboard.html`을 성공·실패 모두 생성**한다.
+   - 실행마다 별도 HTML을 늘리지 않고 프로젝트당 한 파일을 갱신한다. 이 파일은 생성 시점의 스냅샷이므로 화면의 `상태 재계산 시각`을 함께 확인한다.
 2. `python csc.py roster` 결과에 `claude`, `antigravity`가 모두 있어야 소켓 연결로 인정한다.
 3. `.agent-swarm/workers/<agent>.json`의 PID 생존, `ready`, 최신 하트비트를 함께 확인한다.
 4. 실제 판단이 필요하면 `TASK`를 보내고 `python csc.py await --task-id ...`로 유계 대기한다.
 5. `RESULT`만 표결로 사용하고 `BLOCKED`는 `availability_code`와 원문 증거를 보존한다.
 6. 결론·반론·수정·판정을 `.agent-swarm`과 `docs/03_EXPERIMENT_LOG.md`에 기록한다.
 
-`항시 연결`의 정확한 뜻은 브로커와 경량 Python 어댑터가 상주한다는 뜻이다. Claude/Antigravity 모델 프로세스는 비용과 고착을 막기 위해 TASK마다 유계 자식 프로세스로 실행한다. Codex PC 앱은 외부 로컬 프로세스가 임의로 새 모델 턴을 주입할 수 없으므로 사용자의 활성 턴에서 사령관 역할을 수행한다. 이 한계를 숨기거나 완전 자율 데몬으로 표현하지 않는다.
+`항시 연결`의 현재 구현은 브로커와 경량 Python 어댑터가 상주하고 Claude/Antigravity 모델 프로세스를 TASK마다 유계 자식 프로세스로 실행한다는 뜻이다. 목표 구조는 두 CLI 모두 공식 스트리밍 입력을 사용하는 장기 백그라운드 자식 프로세스로 맞추되, 인증·권한·취소·재시작 시험을 통과한 뒤 전환한다. Antigravity는 `--input-format stream-json --output-format stream-json`을 사용하고 Bridge는 선택적 보조 수단으로만 둔다. Codex PC 앱은 외부 로컬 프로세스가 임의로 새 모델 턴을 주입할 수 없으므로 사용자의 활성 턴에서 사령관 역할을 수행한다. 이 한계를 숨기거나 완전 자율 데몬으로 표현하지 않는다.
 
 ## 8. 비상 정족수 계약
 

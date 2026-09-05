@@ -27,6 +27,8 @@
 21. `MIA_SKILL_AUTHORING_STANDARD.md` — MIA 에이전트 스킬 제작 원리 표준 (v2.0)
 22. `21_C1_봉인_감사_커밋_푸시_실행기록.md` — 진단부터 봉인·표결·사용자 승인·Git 실행까지의 쉬운 설명
 23. `reference-materials/README.md` — 사용자 원자료·초안·스크린샷의 설명형 파일명 인덱스
+24. `22_ANTIGRAVITY_BACKGROUND_CLI_VALUE_ASSESSMENT.md` — Antigravity를 Bridge 대신 백그라운드 CLI로 운용하는 세 대안과 조건부 Go 판정
+25. `23_C3P_PER_PROJECT_DASHBOARD_VALUE_AND_PLAN.md` — C3P 발동 시 프로젝트별 감시판을 만드는 가치평가, 최소 구현, 확장 계획
 
 ## 운영 규칙
 

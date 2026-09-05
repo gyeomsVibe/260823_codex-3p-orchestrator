@@ -14,6 +14,7 @@ from __future__ import annotations
 import os
 import re
 import unittest
+from unittest import mock
 
 PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 import sys
@@ -109,6 +110,11 @@ class TestRenderedPageObeysThePrinciple(unittest.TestCase):
         self.assertIn('<html lang="ko"', self.doc)
         self.assertIn("3대 AI 도구 감시판", self.doc)
 
+    def test_page_identifies_its_physical_project(self):
+        project_name = os.path.basename(PROJECT_ROOT)
+        self.assertIn(project_name, self.doc)
+        self.assertIn("상태 재계산 시각", self.doc)
+
     def test_page_points_back_to_the_raw_log(self):
         """사용자가 언제든 원문을 직접 볼 수 있어야 한다."""
         self.assertIn("queue.jsonl", self.doc)
@@ -120,6 +126,7 @@ class TestPrincipleIsPinnedInEveryToolRuleFile(unittest.TestCase):
     FILES = (
         ".agent-swarm/USER_FIRST_PRINCIPLE.md",
         "AGENTS.md",
+        "CLAUDE.md",
         "GEMINI.md",
         ".agents/skills/codex-3p-orchestrator/SKILL.md",
         ".agent-swarm/GOVERNANCE.md",
@@ -134,6 +141,8 @@ class TestPrincipleIsPinnedInEveryToolRuleFile(unittest.TestCase):
                     text = f.read()
                 self.assertIn("모르는 걸 모르는 사용자", text,
                               f"{rel} 에 대상 사용자 정의가 없다")
+                self.assertIn("오류수정은 3대 AI 도구 공통으로 동시 동기화", text,
+                              f"{rel} 에 공통 오류수정 동기화 계약이 없다")
 
 
 
@@ -160,6 +169,58 @@ class TestPrincipleSyncAcrossAllThreeTools(unittest.TestCase):
         for name, needles in csc_sync.CONTRACTS:
             with self.subTest(name):
                 self.assertTrue(needles, f"{name} 계약에 확인 문자열이 없다")
+
+
+class TestC3PTriggerContract(unittest.TestCase):
+    """활성 트리거에서 잘못된 씨2피 표기가 다시 살아나지 않게 한다."""
+
+    FILES = (
+        ".agents/skills/codex-3p-orchestrator/SKILL.md",
+        "docs/reference-materials/CSC_MIA_STANDARDIZATION_IMPLEMENTATION_PLAN.md",
+    )
+
+    def test_korean_trigger_is_c3p(self):
+        for rel in self.FILES:
+            with self.subTest(rel):
+                with open(os.path.join(PROJECT_ROOT, rel), encoding="utf-8") as f:
+                    text = f.read()
+                self.assertIn("MIA 씨3피 발동", text)
+                self.assertNotIn("MIA 씨2피 발동", text)
+
+
+class TestPerProjectDashboardActivation(unittest.TestCase):
+    """C3P 발동은 성공·실패 여부와 무관하게 해당 프로젝트 감시판을 남긴다."""
+
+    def test_success_returns_project_dashboard_identity(self):
+        import csc
+        expected = os.path.join(PROJECT_ROOT, ".agent-swarm", "dashboard.html")
+        with mock.patch.object(csc.csc_runtime, "activate", return_value={"status": "ready"}), \
+             mock.patch("csc_dashboard.write_dashboard", return_value=expected):
+            result = csc.activate_project(csc.Path(PROJECT_ROOT), timeout=1)
+        self.assertEqual(result["dashboard"]["project"], os.path.basename(PROJECT_ROOT))
+        self.assertEqual(result["dashboard"]["path"], expected)
+        self.assertEqual(result["dashboard"]["kind"], "activation_snapshot")
+
+    def test_failure_still_writes_dashboard_before_propagating(self):
+        import csc
+        with mock.patch.object(
+                csc.csc_runtime, "activate", side_effect=csc.csc_runtime.ActivationError("boom")), \
+             mock.patch("csc_dashboard.write_dashboard") as write_dashboard:
+            with self.assertRaises(csc.csc_runtime.ActivationError):
+                csc.activate_project(csc.Path(PROJECT_ROOT), timeout=1)
+        write_dashboard.assert_called_once_with()
+
+    def test_contract_is_synchronized_across_three_tool_adapters(self):
+        contract = "C3P 발동 시 현재 프로젝트 전용 `.agent-swarm/dashboard.html`을 성공·실패 모두 생성"
+        files = (
+            "AGENTS.md", "CLAUDE.md", "GEMINI.md",
+            ".agents/skills/codex-3p-orchestrator/SKILL.md",
+            ".agent-swarm/GOVERNANCE.md",
+        )
+        for rel in files:
+            with self.subTest(rel):
+                with open(os.path.join(PROJECT_ROOT, rel), encoding="utf-8") as f:
+                    self.assertIn(contract, f.read())
 
 
 class TestDualTrackSeparation(unittest.TestCase):

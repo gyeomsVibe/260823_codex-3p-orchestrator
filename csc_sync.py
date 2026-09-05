@@ -1,8 +1,8 @@
 #!/usr/bin/env python
-"""사용자 우선 원칙 동시성 동기화 검사기 (Principle Sync Checker).
+"""3대 도구 공통 원칙 동기화 검사기 (Cross-Platform Principle Sync Checker).
 
 사용자 지시 (2026-09-06):
-    "모르는 걸 모르는 사용자 원칙은 모든 3대 AI 도구에 동시성 동기화되어야 한다."
+    "모르는 걸 모르는 사용자 원칙과 오류수정은 모든 3대 AI 도구에 동시 동기화되어야 한다."
 
 왜 '있는지 확인' 만으로는 부족한가
     앞선 테스트는 각 규칙 파일에 문구가 **존재하는지**만 봤다.
@@ -47,6 +47,7 @@ CONTRACTS = [
     ("상태 3요소", ["왜 그렇게 판단했는지", "왜 그렇게 봤나"]),
     ("사용자 행동 안내", ["무엇을 하면 되는지", "하실 일", "사용자가 할 일"]),
     ("나쁜 소식 우선", ["나쁜 소식", "미검증 항목을 성공 항목보다"]),
+    ("오류수정 3도구 동시 동기화", ["오류수정은 3대 AI 도구 공통으로 동시 동기화"]),
     ("위반 시 제재", ["CALL_OUT"]),
 ]
 
@@ -54,6 +55,7 @@ CONTRACTS = [
 TARGETS = [
     (".agent-swarm/USER_FIRST_PRINCIPLE.md", "정본 (모든 도구)"),
     ("AGENTS.md", "3대 도구 공통 규약"),
+    ("CLAUDE.md", "Claude Code"),
     ("GEMINI.md", "Antigravity"),
     (".agents/skills/codex-3p-orchestrator/SKILL.md", "Codex 스킬"),
     (".agent-swarm/GOVERNANCE.md", "거버넌스 12절"),
@@ -97,7 +99,7 @@ def check() -> tuple[list[dict], bool]:
 
 def main() -> int:
     ap = argparse.ArgumentParser(
-        description="사용자 우선 원칙이 3대 도구에 동일하게 반영됐는지 검사한다")
+        description="공통 원칙과 오류수정 계약이 3대 도구에 동일하게 반영됐는지 검사한다")
     ap.add_argument("--quiet", action="store_true", help="문제가 있을 때만 출력한다")
     args = ap.parse_args()
 
@@ -108,7 +110,7 @@ def main() -> int:
         return 0
 
     print("=" * 68)
-    print("사용자 우선 원칙 동기화 검사 (User-First Principle Sync)")
+    print("3대 도구 공통 원칙 동기화 검사 (Cross-Platform Principle Sync)")
     print(f"정본: .agent-swarm/USER_FIRST_PRINCIPLE.md  지문: {fp or '없음'}")
     print("=" * 68)
     for r in rows:

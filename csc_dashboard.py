@@ -33,6 +33,7 @@ import sys
 from datetime import datetime, timezone
 
 HERE = os.path.dirname(os.path.abspath(__file__))
+PROJECT_NAME = os.path.basename(HERE)
 SWARM = os.path.join(HERE, ".agent-swarm")
 QUEUE = os.path.join(SWARM, "messages", "queue.jsonl")
 OUT = os.path.join(SWARM, "dashboard.html")
@@ -394,6 +395,7 @@ def build() -> str:
         for k, v in sorted(counts.items(), key=lambda x: -x[1]) if k in AGENTS)
 
     return TEMPLATE.format(
+        project=html.escape(PROJECT_NAME),
         verdict=html.escape(verdict), vclass=vclass, vline=html.escape(vline),
         cards=cards, items="".join(items), roles=roles, glossary=glossary,
         now=html.escape(now), total=len(rows), shown=len(recent),
@@ -403,7 +405,7 @@ def build() -> str:
 TEMPLATE = """<!doctype html><html lang="ko"><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta http-equiv="refresh" content="30">
-<title>3대 AI 도구 감시판</title>
+<title>{project} — 3대 AI 도구 감시판</title>
 <style>
 :root{{--bg:#faf9f7;--fg:#1a1a18;--mut:#6b6862;--line:#e2ded6;--card:#fff;
 --ok:#0f766e;--bad:#b91c1c;--codex:#6b4fbb;--claude:#c2410c;--anti:#0f766e}}
@@ -465,9 +467,9 @@ footer{{margin-top:34px;padding-top:14px;border-top:1px solid var(--line);
 color:var(--mut);font-size:12px;line-height:1.7}}
 </style>
 <div class="wrap">
-<h1>3대 AI 도구 감시판</h1>
-<div class="lede">코덱스·클로드 코드·안티그래비티가 지금 무엇을 하고 있는지 보여주는 화면입니다.
-30초마다 저절로 새로 고쳐집니다. 마지막 갱신 {now}</div>
+<h1>{project} · 3대 AI 도구 감시판</h1>
+<div class="lede">이 프로젝트에서 코덱스·클로드 코드·안티그래비티가 무엇을 하고 있는지 보여주는 화면입니다.
+브라우저는 30초마다 이 스냅샷 파일을 다시 읽습니다. 상태 재계산 시각 {now}</div>
 
 <section class="verdict {vclass}">
 <div class="big">{verdict}</div>
@@ -501,9 +503,9 @@ color:var(--mut);font-size:12px;line-height:1.7}}
 세 도구가 실제로 주고받은 원문은 <code>{queue}</code> 에 그대로 쌓입니다.
 이 화면은 그 파일을 <b>읽기만 해서</b> 사람이 보기 쉽게 옮긴 것입니다.
 원문은 보기 좋게 고치지 않습니다 — 고치면 더 이상 증거가 아니기 때문입니다.<br><br>
-<b>갱신 방식</b> — 세 도구가 일할 때마다 자동으로 다시 만들어집니다.
-직접 만들려면 터미널에 <code>python csc_dashboard.py</code> 를 입력하세요.
-아무도 일하지 않으면 갱신도 멈추는데, 그때는 바뀔 것이 없다는 뜻입니다.
+<b>갱신 방식</b> — C3P 발동과 Claude Code 훅 실행 때 다시 만듭니다.
+직접 갱신하려면 이 프로젝트 터미널에서 <code>python csc_dashboard.py</code> 를 입력하세요.
+표시된 상태 재계산 시각이 오래됐다면 현재 상태라고 단정하지 마세요.
 </footer>
 </div>
 <script>
@@ -523,6 +525,17 @@ apply();
 </html>"""
 
 
+def write_dashboard(doc: str | None = None) -> str:
+    """현재 프로젝트의 검증된 대시보드 스냅샷을 쓰고 절대 경로를 돌려준다."""
+    doc = build() if doc is None else doc
+    problems = self_check(doc)
+    if problems:
+        raise RuntimeError("대시보드 자가검사 실패: " + "; ".join(problems))
+    with open(OUT, "w", encoding="utf-8") as f:
+        f.write(doc)
+    return OUT
+
+
 def main() -> int:
     ap = argparse.ArgumentParser(description="사용자용 감시 대시보드를 만든다")
     ap.add_argument("--check", action="store_true", help="자가검사만 하고 끝낸다")
@@ -540,15 +553,14 @@ def main() -> int:
         print("자가검사 통과 — 번역 없이 노출된 용어 0건")
         return 0
 
-    with open(OUT, "w", encoding="utf-8") as f:
-        f.write(doc)
-    print(f"만들었습니다: {OUT}")
     if problems:
         # 조용히 넘기지 않는다. 원칙 위반을 숨기면 원칙이 없는 것과 같다.
         print("⚠️ 원칙 위반 — 한국어 병기 없이 노출된 용어가 있습니다:")
         for p in problems:
             print("   ", p)
         return 1
+    write_dashboard(doc)
+    print(f"만들었습니다: {OUT}")
     print("자가검사 통과 — 번역 없이 노출된 용어 0건")
     return 0
 
