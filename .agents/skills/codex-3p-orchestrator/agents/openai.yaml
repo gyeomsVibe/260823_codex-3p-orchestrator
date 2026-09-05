@@ -1,0 +1,4 @@
+interface:
+  display_name: "Codex 3P Orchestrator"
+  short_description: "3대 AI 도구(Codex, Claude, Antigravity) 실시간 유기체 오케스트레이터"
+  default_prompt: "$codex-3p-orchestrator 3대 도구 실시간 오케스트레이션을 가동해줘."

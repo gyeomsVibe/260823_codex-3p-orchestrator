@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>오늘 뭐 먹지?</title>
+<style>
+  :root{
+    --bg:#fbf7f2; --card:#fff; --ink:#1f2328; --muted:#6b7280;
+    /* Antigravity UX 검증 지적 + 대비비 직접 계산으로 확인:
+       기존 #e2543b 는 흰 배경에서 3.77:1 로 WCAG 2.1 AA(4.5:1) 미달이었다.
+       #d33c22 는 4.73:1 로 통과한다. 다크 모드 액센트는 5.84:1 이라 그대로 둔다. */
+    --line:#e8e2d9; --accent:#d33c22; --accent-ink:#fff;
+    --ok:#1a7f4b; --bad:#c0392b; --shadow:0 1px 2px rgba(0,0,0,.05),0 8px 24px rgba(0,0,0,.06);
+  }
+  @media (prefers-color-scheme:dark){
+    :root:not([data-theme="light"]){
+      --bg:#14161a; --card:#1c1f24; --ink:#eceff3; --muted:#9aa3ad;
+      --line:#2b3037; --accent:#ff6a4d; --accent-ink:#1a1207;
+      --ok:#4ade80; --bad:#f87171; --shadow:0 1px 2px rgba(0,0,0,.4),0 8px 24px rgba(0,0,0,.35);
+    }
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;overflow-x:hidden}
+  body{
+    background:var(--bg); color:var(--ink);
+    font:16px/1.55 system-ui,-apple-system,"Segoe UI","Noto Sans KR",sans-serif;
+    display:flex; justify-content:center;
+    padding:20px 16px calc(28px + env(safe-area-inset-bottom));
+  }
+  .wrap{width:100%; max-width:420px}
+  header{text-align:center; margin-bottom:18px}
+  h1{margin:0; font-size:22px; letter-spacing:-.02em}
+  .sub{margin:4px 0 0; color:var(--muted); font-size:13px}
+
+  .card{
+    background:var(--card); border:1px solid var(--line); border-radius:20px;
+    box-shadow:var(--shadow); padding:28px 20px; text-align:center;
+  }
+  .cat{
+    display:inline-block; font-size:12px; font-weight:700; letter-spacing:.04em;
+    color:var(--accent); border:1px solid var(--accent); border-radius:999px;
+    padding:4px 12px; margin-bottom:14px;
+  }
+  .emoji{font-size:84px; line-height:1.1; margin:2px 0 8px; display:block}
+  .name{margin:0; font-size:27px; font-weight:800; letter-spacing:-.02em; word-break:keep-all}
+  .desc{margin:8px 0 0; color:var(--muted); font-size:14px; word-break:keep-all}
+
+  .btn{
+    -webkit-tap-highlight-color:transparent;
+    display:flex; align-items:center; justify-content:center; gap:8px;
+    width:100%; min-height:56px; margin-top:18px; padding:0 20px;
+    font:inherit; font-size:17px; font-weight:700; cursor:pointer;
+    color:var(--accent-ink); background:var(--accent);
+    border:0; border-radius:16px; transition:transform .06s ease, filter .15s ease;
+  }
+  .btn:hover{filter:brightness(1.06)}
+  .btn:active{transform:scale(.985)}
+  .btn:focus-visible{outline:3px solid var(--accent); outline-offset:3px}
+
+  h2{font-size:13px; color:var(--muted); font-weight:700; letter-spacing:.06em;
+     margin:26px 0 10px; text-transform:uppercase}
+  ol{list-style:none; margin:0; padding:0; display:grid; gap:8px}
+  li{
+    display:flex; align-items:center; gap:12px; min-height:48px;
+    background:var(--card); border:1px solid var(--line);
+    border-radius:14px; padding:8px 14px;
+  }
+  li .e{font-size:26px; flex:none}
+  li .t{min-width:0; text-align:left}
+  li .n{font-weight:700; font-size:15px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+  li .c{font-size:12px; color:var(--muted)}
+  .empty{color:var(--muted); font-size:14px; padding:14px 2px}
+
+  footer{margin-top:26px; text-align:center; font-size:12px; color:var(--muted); line-height:1.7}
+  footer .roles{font-weight:600}
+  footer .build{opacity:.85}
+
+  /* ?selftest=1 */
+  #selftest{margin-top:24px; border:1px solid var(--line); border-radius:16px;
+            background:var(--card); padding:16px 16px 10px; text-align:left}
+  #selftest h3{margin:0 0 10px; font-size:14px}
+  #selftest .row{display:flex; gap:8px; font-size:13px; padding:5px 0;
+                 border-top:1px solid var(--line)}
+  #selftest .row:first-of-type{border-top:0}
+  #selftest .st{flex:none; font-weight:800}
+  .pass{color:var(--ok)} .fail{color:var(--bad)}
+  #selftest .sum{margin:12px 0 6px; font-weight:800; font-size:14px}
+  #selftest .det{color:var(--muted); font-size:12px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>오늘 뭐 먹지?</h1>
+    <p class="sub">고민은 3초, 결정은 한 번에</p>
+  </header>
+
+  <!-- 검토 지적 반영: 버튼을 눌러 갱신되는 추천이 스크린리더에 통지되지 않았다.
+       카드 전체를 live region 으로 두고, 이모지는 장식이므로 접근성 트리에서 뺀다. -->
+  <main class="card" aria-live="polite" aria-atomic="true">
+    <span class="cat" id="cat">–</span>
+    <span class="emoji" id="emoji" aria-hidden="true">🍽️</span>
+    <p class="name" id="name">준비 중</p>
+    <p class="desc" id="desc">버튼을 눌러 추천을 받아보세요</p>
+    <button class="btn" id="again" type="button">
+      <span aria-hidden="true">🎲</span><span>다시 추천</span>
+    </button>
+  </main>
+
+  <h2>최근 추천 3개</h2>
+  <!-- Antigravity 지적: 카드와 이력이 둘 다 live region 이면 한 번의 추천에
+       같은 내용이 두 번 낭독된다. 새 추천의 주된 알림은 카드이므로
+       이력은 live region 에서 뺀다. (이 결함은 내가 직전 수정에서 만들었다) -->
+  <ol id="history"></ol>
+
+  <footer>
+    <!-- 명세의 고정 문구는 '의도한 역할'이었고 실제와 달랐다.
+         지금은 각 역할의 실제 상태를 표기한다. 아직 안 일어난 일을 했다고 쓰지 않는다. -->
+    <div class="roles">Claude Code 구현·수정 · Claude Code(별도 세션) 코드 검토 · Antigravity UX·접근성 검증 · Codex 통합 판정 대기</div>
+    <div class="build">v0.3 · 2026-09-05 · 3분할 검토 지적 8건 반영</div>
+  </footer>
+</div>
+
+<script>
+(function () {
+  "use strict";
+
+  var MENUS = [
+    { cat:"한식", emoji:"🍚", name:"김치찌개",   desc:"얼큰한 국물에 밥 한 공기" },
+    { cat:"한식", emoji:"🍲", name:"된장찌개",   desc:"구수하고 속 편한 한 그릇" },
+    { cat:"한식", emoji:"🥩", name:"제육볶음",   desc:"매콤달콤 밥도둑" },
+    { cat:"한식", emoji:"🍜", name:"칼국수",     desc:"쫄깃한 면에 진한 육수" },
+    { cat:"한식", emoji:"🍗", name:"닭갈비",     desc:"볶음밥까지 마무리로" },
+    { cat:"한식", emoji:"🥘", name:"부대찌개",   desc:"여럿이 먹을수록 맛있는" },
+
+    { cat:"중식", emoji:"🍜", name:"짜장면",     desc:"고민될 땐 결국 이것" },
+    { cat:"중식", emoji:"🌶️", name:"짬뽕",       desc:"불맛 가득 얼큰한 해물" },
+    { cat:"중식", emoji:"🍤", name:"탕수육",     desc:"바삭함과 새콤함 사이" },
+    { cat:"중식", emoji:"🍚", name:"볶음밥",     desc:"불맛 나는 고슬고슬한 밥" },
+    { cat:"중식", emoji:"🥟", name:"군만두",     desc:"겉은 바삭 속은 촉촉" },
+    { cat:"중식", emoji:"🍲", name:"마라탕",     desc:"내 맘대로 고르는 얼얼함" },
+
+    { cat:"일식", emoji:"🍣", name:"초밥",       desc:"신선함이 곧 맛" },
+    { cat:"일식", emoji:"🍜", name:"돈코츠 라멘", desc:"진한 국물에 차슈 한 점" },
+    { cat:"일식", emoji:"🍤", name:"텐동",       desc:"튀김과 달짝지근한 소스" },
+    { cat:"일식", emoji:"🍛", name:"카레라이스", desc:"실패 없는 무난함" },
+    { cat:"일식", emoji:"🥢", name:"규동",       desc:"빠르게 든든하게" },
+    { cat:"일식", emoji:"🍢", name:"우동",       desc:"따끈한 국물에 도톰한 면" },
+
+    { cat:"양식", emoji:"🍝", name:"까르보나라", desc:"고소한 크림에 후추 톡" },
+    { cat:"양식", emoji:"🍕", name:"피자",       desc:"나눠 먹으면 두 배" },
+    { cat:"양식", emoji:"🍔", name:"수제버거",   desc:"두툼한 패티의 만족감" },
+    { cat:"양식", emoji:"🥗", name:"샐러드 볼",  desc:"가볍게 먹고 싶은 날" },
+    { cat:"양식", emoji:"🥩", name:"스테이크",   desc:"오늘은 좀 특별하게" },
+    { cat:"양식", emoji:"🌮", name:"타코",       desc:"한 손에 쏙 들어오는 즐거움" },
+
+    { cat:"간식", emoji:"🍢", name:"떡볶이",     desc:"매콤달콤 국민 간식" },
+    { cat:"간식", emoji:"🍞", name:"토스트",     desc:"간단하지만 든든하게" },
+    { cat:"간식", emoji:"🍩", name:"도넛",       desc:"달달한 게 필요한 순간" },
+    { cat:"간식", emoji:"🧋", name:"밀크티",     desc:"쫀득한 펄과 함께" },
+    { cat:"간식", emoji:"🍟", name:"감자튀김",   desc:"바삭함은 언제나 옳다" },
+    { cat:"간식", emoji:"🍦", name:"아이스크림", desc:"마무리는 역시 달콤하게" }
+  ];
+
+  var HISTORY_MAX = 3;
+  var STORAGE_KEY = "swarm-meal-history-v1";
+  /* 결함4 대응: 자체검증은 실사용 키를 건드리지 않는다. */
+  var SELFTEST_KEY = "swarm-meal-selftest-v1";
+
+  var el = {
+    cat:     document.getElementById("cat"),
+    emoji:   document.getElementById("emoji"),
+    name:    document.getElementById("name"),
+    desc:    document.getElementById("desc"),
+    again:   document.getElementById("again"),
+    history: document.getElementById("history")
+  };
+
+  /* 결함4 대응: 자체검증 모드는 실사용 저장소를 건드리지 않는다.
+     이전에는 selftest 가 recommend() 를 9회 호출하며 같은 키에 커밋해,
+     진단 URL 을 한 번 여는 것만으로 사용자의 최근 추천 3개가 전부 대체됐다. */
+  var IS_SELFTEST = /[?&]selftest=1(&|$)/.test(location.search);
+  var activeKey = IS_SELFTEST ? SELFTEST_KEY : STORAGE_KEY;
+
+  var current = null;
+  var recentList = loadHistory();
+
+  /* localStorage 는 사생활 모드나 정책에 따라 던질 수 있다. 앱이 죽으면 안 된다. */
+  function loadHistory() {
+    try {
+      var raw = localStorage.getItem(activeKey);
+      var arr = raw ? JSON.parse(raw) : [];
+      if (!Array.isArray(arr)) return [];
+      /* 결함1 대응: 배열 여부만 보면 부족하다.
+         '[null]' 한 줄이면 renderHistory 가 m.emoji 에서 throw 하고
+         초기 추천까지 중단돼 카드가 "준비 중" 으로 굳는다(브라우저에서 재현 확인).
+         저장소는 신뢰할 수 없는 입력이다. 원소 형태까지 검증한다. */
+      return arr.filter(function (m) {
+        return m && typeof m === "object"
+          && typeof m.cat === "string"
+          && typeof m.emoji === "string"
+          && typeof m.name === "string";
+      }).slice(0, HISTORY_MAX);
+    } catch (e) { return []; }
+  }
+  function saveHistory() {
+    try { localStorage.setItem(activeKey, JSON.stringify(recentList)); } catch (e) {}
+  }
+
+  /* 연속으로 같은 메뉴가 나오지 않게 한다. 직전 것만 제외하므로 항상 후보가 남는다. */
+  function pick(prevName) {
+    var pool = MENUS;
+    if (prevName) {
+      pool = MENUS.filter(function (m) { return m.name !== prevName; });
+      if (!pool.length) pool = MENUS;
+    }
+    return pool[Math.floor(Math.random() * pool.length)];
+  }
+
+  function renderHistory() {
+    el.history.innerHTML = "";
+    if (!recentList.length) {
+      var p = document.createElement("li");
+      p.className = "empty";
+      p.textContent = "아직 추천 기록이 없습니다";
+      el.history.appendChild(p);
+      return;
+    }
+    recentList.forEach(function (m) {
+      var li = document.createElement("li");
+      var e = document.createElement("span");
+      e.className = "e"; e.setAttribute("aria-hidden", "true"); e.textContent = m.emoji;
+      var t = document.createElement("div"); t.className = "t";
+      var n = document.createElement("div"); n.className = "n"; n.textContent = m.name;
+      var c = document.createElement("div"); c.className = "c"; c.textContent = m.cat;
+      t.appendChild(n); t.appendChild(c);
+      li.appendChild(e); li.appendChild(t);
+      el.history.appendChild(li);
+    });
+  }
+
+  function recommend() {
+    var m = pick(current && current.name);
+    current = m;
+    el.cat.textContent = m.cat;
+    el.emoji.textContent = m.emoji;
+    el.name.textContent = m.name;
+    el.desc.textContent = m.desc;
+    /* 화면에 실제로 표시된 추천만 최신순으로 기록한다. */
+    recentList.unshift({ cat: m.cat, emoji: m.emoji, name: m.name });
+    recentList = recentList.slice(0, HISTORY_MAX);
+    saveHistory();
+    renderHistory();
+    return m;
+  }
+
+  el.again.addEventListener("click", function () { recommend(); });
+
+  renderHistory();
+  recommend();              // 최초 추천
+
+  /* ---------------------------------------------------------- ?selftest=1
+     주장이 아니라 실제 DOM 과 동작을 측정한다. 실패해도 앱은 계속 동작한다. */
+  if (IS_SELFTEST) {
+    var results = [];
+    function check(name, fn) {
+      try {
+        var r = fn();
+        results.push({ name: name, pass: r === true, detail: r === true ? "" : String(r) });
+      } catch (e) {
+        results.push({ name: name, pass: false, detail: e.message });
+      }
+    }
+
+    check("카테고리 5종 존재", function () {
+      var cats = {}; MENUS.forEach(function (m) { cats[m.cat] = 1; });
+      var got = Object.keys(cats).sort().join(",");
+      var want = ["간식", "양식", "일식", "중식", "한식"].sort().join(",");
+      return got === want || "실제=" + got;
+    });
+
+    check("모든 항목에 이모지·이름·설명", function () {
+      var bad = MENUS.filter(function (m) { return !m.emoji || !m.name || !m.desc; });
+      return bad.length === 0 || bad.length + "건 누락";
+    });
+
+    check("연속 중복 없음 (300회 추천)", function () {
+      var prev = null, dup = 0;
+      for (var i = 0; i < 300; i++) {
+        var m = pick(prev && prev.name);
+        if (prev && m.name === prev.name) dup++;
+        prev = m;
+      }
+      return dup === 0 || "연속 중복 " + dup + "회";
+    });
+
+    check("이력 최대 3개 유지", function () {
+      for (var i = 0; i < 8; i++) recommend();
+      return recentList.length === HISTORY_MAX || "실제 " + recentList.length + "개";
+    });
+
+    check("이력 최신순 정렬", function () {
+      /* 결함5 대응: 앞 테스트가 이력을 채워놨다는 전제를 없앤다.
+         순서를 바꾸거나 앞 테스트를 지워도 이 검사는 스스로 성립해야 한다. */
+      if (recentList.length < 2) { recommend(); recommend(); }
+      var before = recentList[0] && recentList[0].name;
+      var m = recommend();
+      return (recentList[0].name === m.name && recentList[1] && recentList[1].name === before)
+        || "최신 항목이 맨 앞이 아니다";
+    });
+
+    check("localStorage 영속", function () {
+      saveHistory();
+      /* 결함4 수정 후 회귀: saveHistory 는 activeKey 에 쓰는데
+         이 검사만 STORAGE_KEY 를 읽어 "복원 개수 불일치" 로 오보고했다.
+         selftest 가 스스로 잡아냈다. 읽는 키를 저장한 키와 일치시킨다. */
+      var raw = localStorage.getItem(activeKey);
+      if (!raw) return "저장 실패 (사생활 모드일 수 있음)";
+      var back = JSON.parse(raw);
+      return back.length === recentList.length || "복원 개수 불일치";
+    });
+
+    check("터치 타깃 44×44px 이상", function () {
+      var small = [];
+      Array.prototype.slice.call(document.querySelectorAll("button, li")).forEach(function (n) {
+        var r = n.getBoundingClientRect();
+        if (r.height > 0 && (r.height < 44 || r.width < 44)) {
+          small.push(Math.round(r.width) + "×" + Math.round(r.height));
+        }
+      });
+      return small.length === 0 || "미달 " + small.join(", ");
+    });
+
+    check("가로 스크롤 없음", function () {
+      var over = document.documentElement.scrollWidth - document.documentElement.clientWidth;
+      return over <= 0 || "가로 초과 " + over + "px";
+    });
+
+    check("외부 네트워크 요청 0건", function () {
+      var ext = [];
+      Array.prototype.slice.call(document.querySelectorAll("[src],[href]")).forEach(function (n) {
+        var v = n.getAttribute("src") || n.getAttribute("href") || "";
+        if (/^(https?:)?\/\//.test(v)) ext.push(v);
+      });
+      return ext.length === 0 || ext.join(", ");
+    });
+
+    /* 결함2 대응: check() 안쪽만 보호돼 있었고 리포트 렌더링 구간은 무보호였다.
+       .wrap 이 없으면 appendChild 에서 throw 해 window.__selftest 기록 전에 죽는다.
+       "실패해도 앱은 계속 동작한다"는 주석의 약속을 코드가 지키게 만든다. */
+    try {
+    var box = document.createElement("section");
+    box.id = "selftest";
+    var passed = results.filter(function (r) { return r.pass; }).length;
+    var h = document.createElement("h3");
+    h.textContent = "자체 검증 (?selftest=1)";
+    box.appendChild(h);
+    results.forEach(function (r) {
+      var row = document.createElement("div"); row.className = "row";
+      var st = document.createElement("span");
+      st.className = "st " + (r.pass ? "pass" : "fail");
+      st.textContent = r.pass ? "PASS" : "FAIL";
+      var tx = document.createElement("span");
+      tx.textContent = r.name + (r.detail ? " — " + r.detail : "");
+      row.appendChild(st); row.appendChild(tx); box.appendChild(row);
+    });
+    var sum = document.createElement("div");
+    sum.className = "sum " + (passed === results.length ? "pass" : "fail");
+    sum.textContent = passed + " / " + results.length + " 통과";
+    box.appendChild(sum);
+    var det = document.createElement("div");
+    det.className = "det";
+    det.textContent = "뷰포트 " + window.innerWidth + "×" + window.innerHeight +
+                      " · 메뉴 " + MENUS.length + "종";
+    box.appendChild(det);
+    var host = document.querySelector(".wrap") || document.body;
+    if (host) host.appendChild(box);
+    } catch (e) {
+      if (window.console && console.error) console.error("[selftest] 리포트 렌더 실패:", e);
+    }
+
+    window.__selftest = { passed: passed, total: results.length, results: results };
+  }
+})();
+</script>
+</body>
+</html>

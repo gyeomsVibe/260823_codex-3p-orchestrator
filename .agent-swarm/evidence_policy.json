@@ -1,0 +1,26 @@
+{
+  "_comment": "운영자 소유 검증 정책. 메시지는 이 파일의 '이름'만 고를 수 있고 명령을 지정할 수 없다. 에이전트가 이 파일을 수정하면 안 된다.",
+  "_schema_version": 1,
+  "checks": {
+    "slice_selftest": {
+      "argv": ["python", "csc_slice.py", "selftest"],
+      "desc": "수직 슬라이스 파이프라인 자체검증 9/9"
+    },
+    "evidence_selftest": {
+      "argv": ["python", "csc_evidence.py"],
+      "desc": "증거 게이트 자체검증 5/5"
+    },
+    "app_syntax": {
+      "argv": ["python", "-c", "import io,html.parser as H;p=H.HTMLParser();p.feed(io.open('app/index.html',encoding='utf-8').read());print('html parse ok')"],
+      "desc": "교안 MVP HTML 파싱 가능 여부"
+    },
+    "py_compile_all": {
+      "argv": ["python", "-m", "compileall", "-q", "."],
+      "desc": "프로젝트 전체 파이썬 구문 검사"
+    },
+    "noop_pass": {
+      "argv": ["python", "-c", "pass"],
+      "desc": "게이트 배선 확인용 무해한 통과 케이스"
+    }
+  }
+}

@@ -1,0 +1,64 @@
+# Secrets & Credentials
+.env
+.env.*
+*.pem
+*.key
+*.p12
+*.pfx
+
+# Python caches
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.coverage
+htmlcov/
+*.egg-info/
+dist/
+build/
+
+# Node / JS
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# IDE & OS temporary files
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+*.tmp
+*.temp
+
+# CSC swarm hook 로컬 상태 (커밋 대상 아님)
+.claude/hooks/.state/
+
+# CSC runtime evidence/state (machine-local, regenerated)
+.agent-swarm/broker.json
+.agent-swarm/logs/
+.agent-swarm/workers/
+.agent-swarm/messages/audit.jsonl
+.agent-swarm/messages/all_inbox.jsonl
+.agent-swarm/messages/antigravity_inbox.jsonl
+.agent-swarm/messages/claude_inbox.jsonl
+
+# --- PRE-PUSH G0 감사에서 추가 (2026-09-05) ---
+# 런타임 메시지 로그: 세션 ID·대화 원문·PID 가 누적된다. 정본은 chat/ 이다.
+.agent-swarm/messages/queue.jsonl
+.agent-swarm/messages/codex_inbox.jsonl
+.agent-swarm/dead-letter/
+# 수직 슬라이스 실험용 SQLite. 재생성 가능한 산출물이다.
+.agent-swarm/slice.db
+
+# 작업 중 만든 로컬 백업본
+*.bak
+
+# 뷰어 산출물 (재생성 가능)
+.agent-swarm/conversation.html
+
+# 사용자 대시보드 산출물 (훅이 자동 재생성)
+.agent-swarm/dashboard.html
+
+# 주장 감사 기록 (런타임 로그, 재생성 가능)
+.agent-swarm/messages/claim_audit.jsonl

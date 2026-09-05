@@ -1,0 +1,25 @@
+{
+  "model": "qwen3.5:4b",
+  "role": "non_voting_untrusted_advisor",
+  "cases": [
+    {
+      "case_id": "approval_boundary",
+      "schema_ok": false,
+      "semantic_ok": false,
+      "answer": null,
+      "wall_ms": 45022.32,
+      "error_type": "TimeoutError",
+      "error": "timed out"
+    }
+  ],
+  "summary": {
+    "schema_passes": 0,
+    "semantic_passes": 0,
+    "case_count": 3,
+    "executed_case_count": 1,
+    "median_wall_ms": 45022.32,
+    "model_released": true,
+    "release_error": null,
+    "decision": "NO_GO"
+  }
+}
