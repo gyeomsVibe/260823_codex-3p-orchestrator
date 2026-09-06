@@ -1,6 +1,6 @@
 ---
 name: codex-3p-orchestrator
-description: 3대 AI 도구(Codex, Claude Code, Antigravity)를 단일 지능 유기체로 묶어 작동시키는 실시간 3중 병렬 오케스트레이터 스킬. "MIA 씨3피 발동", "MIA c3p 발동", "MIA 코덱스커멘드 발동", "MIA codex커멘드 발동", "$codex-3p-orchestrator" 요청 시 활성화됩니다.
+description: 3대 AI 도구(Codex, Claude Code, Antigravity)를 단일 지능 유기체로 묶어 작동시키는 실시간 3중 병렬 오케스트레이터 스킬. "c3p 발동", "MIA 씨3피 발동", "MIA c3p 발동", "MIA 코덱스커멘드 발동", "MIA codex커멘드 발동", "$codex-3p-orchestrator" 요청 시 활성화됩니다.
 ---
 
 # 🧬 Codex 3P Orchestrator (코덱스 3P 오케스트레이터)
@@ -26,7 +26,8 @@ description: 3대 AI 도구(Codex, Claude Code, Antigravity)를 단일 지능 �
 본 스킬은 Codex PC 앱을 유일한 사용자 단일 소통 창구(Brain)로 삼고, 백그라운드에서 실행되는 Claude Code CLI와 Antigravity CLI를 로컬 비동기 소켓 브로커(`csc_broker.py`)로 연동합니다. Bridge는 브라우저·도구 연동이 필요한 작업의 선택적 보조 수단이며 기본 통신 경로가 아닙니다.
 
 ### 🎯 트리거 계약 (Trigger Contract)
-- **명시적 호출문**: `"MIA 씨3피 발동"`, `"MIA c3p 발동"`, `"MIA 코덱스커멘드 발동"`, `"MIA codex커멘드 발동"`, `"$codex-3p-orchestrator"`
+- **명시적 호출문**: `"c3p 발동"`, `"MIA 씨3피 발동"`, `"MIA c3p 발동"`, `"MIA 코덱스커멘드 발동"`, `"MIA codex커멘드 발동"`, `"$codex-3p-orchestrator"`
+- **대소문자 계약**: 호출문의 ASCII 영문은 대소문자를 구분하지 않는다. 따라서 `c3p 발동`, `C3P 발동`, `C3p 발동`은 모두 같은 C3P 실기동 절차를 실행한다.
 - **자연어 감지**: "3대 AI 도구 오케스트레이션", "코덱스 사령관 모드", "3자 병렬 유기체 가동"
 
 ---
