@@ -12,7 +12,7 @@
 | 파일명 | 형식 | 설명 | 바로가기 |
 |---|:---:|---|:---:|
 | `02_advisor_consultation_package.html` | 웹 (HTML) | 인터랙티브 5대 섹션, 학술 다크모드, 원페이지 모드, 피드백 복사기 탑재 | [HTML 열기](02_advisor_consultation_package.html) |
-| `02_advisor_consultation_package.pdf` | 문서 (PDF) | 카카오톡 직접 전송 및 인쇄 열람에 최적화된 백색 A4 논문/보고서 규격 PDF (668KB) | [PDF 열기](02_advisor_consultation_package.pdf) |
+| `02_advisor_consultation_package.pdf` | 문서 (PDF) | 카카오톡 직접 전송 및 인쇄 열람에 최적화된 백색 A4 논문/보고서 규격 PDF (902KB, 고대비 완본 6p) | [PDF 열기](02_advisor_consultation_package.pdf) |
 
 ---
 

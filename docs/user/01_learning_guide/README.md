@@ -11,7 +11,7 @@
 | 파일명 | 형식 | 설명 | 바로가기 |
 |---|:---:|---|:---:|
 | `01_codex_3p_orchestrator_learning_guide.html` | 웹 (HTML) | 인터랙티브 탭, 다크 모드, 체크리스트, 원페이지 펼쳐보기 기능 탑재 | [HTML 열기](01_codex_3p_orchestrator_learning_guide.html) |
-| `01_codex_3p_orchestrator_learning_guide.pdf` | 문서 (PDF) | 모바일 카카오톡 열람 및 인쇄에 최적화된 고화질 배포용 단일 PDF (1MB) | [PDF 열기](01_codex_3p_orchestrator_learning_guide.pdf) |
+| `01_codex_3p_orchestrator_learning_guide.pdf` | 문서 (PDF) | 모바일 카카오톡 열람 및 인쇄에 최적화된 고화질 배포용 단일 PDF (1.45MB, 고대비 완본 6p) | [PDF 열기](01_codex_3p_orchestrator_learning_guide.pdf) |
 
 ---
 
