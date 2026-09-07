@@ -156,8 +156,31 @@ class TestQueueWorker(unittest.TestCase):
         self.assertEqual(worker.process_available(), 0)
 
     def test_pid_permission_denied_means_unknown_but_alive(self):
-        with patch("csc_worker.os.kill", side_effect=PermissionError("denied")):
-            self.assertTrue(pid_is_alive(12345))
+        """'모른다' 를 '죽었다' 로 바꾸지 않는다 — 이 불변식이 거짓 사망 보고를 막는다.
+
+        수정 경위 (2026-09-06): 이 테스트는 `csc_worker.os.kill` 을 패치했으나
+        실행 경로에 닿지 못해 Windows 에서 실패했다. 이유가 두 가지다.
+          1. 생존 판정은 `csc_process.probe_pid` 로 옮겨졌고, Windows 에서는
+             `os.kill` 대신 Win32 OpenProcess 분기를 탄다.
+          2. `csc_worker` 는 `from csc_process import probe_pid` 로 이름을 직접
+             묶으므로, 원본 모듈을 패치해도 이미 묶인 이름은 바뀌지 않는다.
+
+        지켜야 할 계약은 플랫폼과 무관하다 — gone 만 사망이고 unknown 은 아니다.
+        그래서 실제 이음매(`csc_worker.probe_pid`)에서 그 계약을 검증한다.
+        """
+        for state, expected in (("alive", True), ("unknown", True), ("gone", False)):
+            with self.subTest(state=state):
+                with patch("csc_worker.probe_pid", return_value=state):
+                    self.assertIs(pid_is_alive(12345), expected)
+
+    @unittest.skipIf(sys.platform == "win32", "Windows 는 os.kill 분기를 타지 않는다")
+    def test_posix_permission_denied_maps_to_unknown(self):
+        """POSIX 에서 권한 거부는 '존재하지만 볼 수 없다' 이지 부재가 아니다."""
+        from csc_process import probe_pid as raw_probe
+        with patch("csc_process.os.kill", side_effect=PermissionError("denied")):
+            self.assertEqual(raw_probe(12345), "unknown")
+        with patch("csc_process.os.kill", side_effect=ProcessLookupError()):
+            self.assertEqual(raw_probe(12345), "gone")
 
 
 if __name__ == "__main__":

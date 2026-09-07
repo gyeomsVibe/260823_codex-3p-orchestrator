@@ -455,52 +455,8 @@ def _pid_alive(pid):
 
 
 def _pid_probe(pid):
-    """PID 조회를 3값으로 나눈다: "alive" / "gone" / "unknown".
-
-    ── 왜 os.kill 을 쓰지 않는가 (2026-09-06 실측) ────────────────────────
-    이 환경(Windows 11 / CPython 3.14)에서 os.kill(pid, 0) 은 자기 자신을 뺀
-    모든 PID 에 대해 동일하게 OSError winerror=87 을 던진다.
-
-        PID   3900 (실제 살아있음) -> OSError errno=22 winerror=87
-        PID  22944 (실제 살아있음) -> OSError errno=22 winerror=87
-        PID 999999 (존재하지 않음) -> OSError errno=22 winerror=87
-
-    살아있는 것과 없는 것이 구분되지 않는다. 즉 이 플랫폼에서 os.kill 기반
-    생존 판정은 '항상 죽었다' 를 뜻한다. 우리는 이 결함을 두 번 겪었다 —
-    한 번은 거짓 DEAD 로, 그다음엔 그걸 덮으려다 거짓 LIVE 로.
-
-    ── 왜 다시 tasklist 인가 ─────────────────────────────────────────────
-    실측에서 tasklist 는 정확히 구분한다(살아있으면 CSV 행, 없으면 안내문).
-    Codex 가 우려한 Access denied 는 실재하는 위험이지만, 그때는 '죽었다' 가
-    아니라 '모른다' 로 분류하면 된다. 능력 없음을 사망으로 단정하지 않는다.
-    """
-    if not isinstance(pid, int) or pid <= 0:
-        return "gone"
-
-    if sys.platform == "win32":
-        try:
-            proc = subprocess.run(
-                ["tasklist", "/FI", "PID eq %d" % pid, "/NH", "/FO", "CSV"],
-                capture_output=True, text=True, encoding="utf-8",
-                errors="replace", timeout=10,
-            )
-        except Exception:
-            return "unknown"          # 조회 자체가 실패했다. 사망 아님.
-        out = (proc.stdout or "")
-        if proc.returncode != 0:
-            return "unknown"
-        # 존재하면 따옴표로 감싼 CSV 행이 나오고 PID 가 그 안에 들어 있다.
-        return "alive" if ('"%d"' % pid) in out else "gone"
-
-    try:
-        os.kill(pid, 0)
-        return "alive"
-    except ProcessLookupError:
-        return "gone"
-    except PermissionError:
-        return "alive"                # 존재하지만 신호 권한이 없다
-    except Exception:
-        return "unknown"
+    from csc_process import probe_pid
+    return probe_pid(pid)
 
 
 def _worker_liveness():
@@ -772,6 +728,10 @@ def main():
 
     # status
     subparsers.add_parser("status", help="Show swarm status dashboard")
+    doctor_parser = subparsers.add_parser("doctor", help="Bounded local transport diagnosis")
+    doctor_parser.add_argument("--json", action="store_true", help="Machine-readable report")
+    doctor_parser.add_argument("--project-root", default=None)
+    doctor_parser.add_argument("--send-test", action="store_true", help="Persist one inert diagnostic EVENT")
 
     args = parser.parse_args()
 
@@ -833,6 +793,18 @@ def main():
             sys.exit(3)
     elif args.command == "status":
         print_status()
+        from csc_doctor import diagnose, print_report
+        report = diagnose()
+        print_report(report)
+        sys.exit(report["exit_code"])
+    elif args.command == "doctor":
+        from csc_doctor import diagnose, print_report
+        report = diagnose(args.project_root, send_test=args.send_test)
+        if args.json:
+            print(json.dumps(report, ensure_ascii=False, indent=2))
+        else:
+            print_report(report)
+        sys.exit(report["exit_code"])
     else:
         parser.print_help()
 

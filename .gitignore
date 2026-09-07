@@ -38,6 +38,7 @@ Thumbs.db
 .agent-swarm/broker.json
 .agent-swarm/logs/
 .agent-swarm/workers/
+.agent-swarm/locks/
 .agent-swarm/messages/audit.jsonl
 .agent-swarm/messages/all_inbox.jsonl
 .agent-swarm/messages/antigravity_inbox.jsonl

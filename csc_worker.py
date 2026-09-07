@@ -17,6 +17,7 @@ from pathlib import Path
 from typing import Any, Callable, Dict, Optional
 
 from csc_auth import AuthenticationError, ReplayWindow, verify_envelope
+from csc_process import probe_pid
 from csc_storage import append_audit, append_once, file_lock, persist_message
 
 
@@ -64,17 +65,8 @@ def _read_json(path: Path, default: Dict[str, Any]) -> Dict[str, Any]:
 
 
 def pid_is_alive(pid: int) -> bool:
-    if not isinstance(pid, int) or pid <= 0:
-        return False
-    try:
-        os.kill(pid, 0)
-    except ProcessLookupError:
-        return False
-    except PermissionError:
-        return True
-    except OSError:
-        return False
-    return True
+    # Preserve ownership on denied observation; unknown must never reclaim a slot.
+    return probe_pid(pid) != "gone"
 
 
 def metadata_is_stale(metadata: Dict[str, Any], stale_after: float, now: Optional[float] = None) -> bool:

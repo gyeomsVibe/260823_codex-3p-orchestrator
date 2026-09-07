@@ -29,6 +29,10 @@
 23. `reference-materials/README.md` — 사용자 원자료·초안·스크린샷의 설명형 파일명 인덱스
 24. `22_ANTIGRAVITY_BACKGROUND_CLI_VALUE_ASSESSMENT.md` — Antigravity를 Bridge 대신 백그라운드 CLI로 운용하는 세 대안과 조건부 Go 판정
 25. `23_C3P_PER_PROJECT_DASHBOARD_VALUE_AND_PLAN.md` — C3P 발동 시 프로젝트별 감시판을 만드는 가치평가, 최소 구현, 확장 계획
+26. `24_CSC_LOCAL_SOCKET_BROKER_RESEARCH_AND_IMPLEMENTATION_PLAN.md` — CSC 소켓 브로커의 실제 상태, 공개 구현 비교, 위협 모델, 단계별 보강·반증 계획
+27. `user/01_learning_guide/` — [01 가이드 팩] 모르는 걸 모르는 사용자를 위한 학습-인지 가이드 (HTML, PDF, 6개 챕터 마크다운)
+28. `user/02_advisor_package/` — [02 자문 팩] 지도교수님께 아키텍처 실증 결과와 4대 난제를 보고하는 지도편달 패키지 (HTML, PDF, 5개 섹션 마크다운)
+29. `user/README.md` — 사용자 및 지도교수 문서 팩 마스터 인덱스
 
 ## 운영 규칙
 

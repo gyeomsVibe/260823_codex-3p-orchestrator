@@ -2,7 +2,8 @@
 """
 Codex Swarm Command (CSC) - Real-time Local Broker Server
 Provides low-latency, port-based, asynchronous Pub/Sub messaging backed by csc_storage.
-Guarantees at-least-once delivery + message_id idempotency.
+ACK confirms durable persistence with message_id storage idempotency.
+Live socket delivery does not yet confirm subscriber processing or replay.
 NOTE: Does NOT claim or guarantee exactly-once delivery.
 """
 

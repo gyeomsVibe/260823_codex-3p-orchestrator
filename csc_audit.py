@@ -219,9 +219,20 @@ def r3_stale_digest(body: str) -> list[dict]:
         val = m.group(1)
         if val == current:
             continue
-        window = body[max(0, m.start() - 120):m.start()]
-        # 과거 값을 '낡았다' 고 밝히며 인용하는 것은 정직한 사용이다.
-        if re.search(r"(낡|이전|과거|폐기|무효|stale|old|였다|였음)", window):
+
+        # 커밋 SHA 를 tree 해시와 비교하지 않는다. 서로 다른 객체 종류다.
+        # 커밋 이력을 인용하는 정직한 문장이 매번 걸리던 원인이었다.
+        try:
+            kind = _git("cat-file", "-t", val)
+        except GitUnavailable:
+            kind = ""
+        if kind and kind != "tree":
+            continue
+
+        # '낡았다' 는 해명은 앞뒤 어디에 와도 인정한다.
+        # 사람은 값을 먼저 적고 설명을 뒤에 붙인다. 앞만 보면 그걸 놓친다.
+        window = body[max(0, m.start() - 150):min(len(body), m.end() + 150)]
+        if re.search(r"(낡|이전|과거|폐기|무효|다름|불일치|일치하지|아니다|소멸|없다|stale|old|superseded|였다|였음)", window):
             continue
         out.append({"rule": "R3", "severity": HIGH,
                     "what": f"해시 {val[:12]}… 를 현행처럼 인용했으나 현재 tree 는 {current[:12]}…",
@@ -249,10 +260,17 @@ def r4_zero_claim(body: str) -> list[dict]:
         os.environ.get("USERNAME"), os.environ.get("USER"),
         os.path.basename(os.path.expanduser("~")),
     ) if n and len(n) >= 4}
+    # 비밀키는 접두사만으로 판단하지 않는다.
+    #
+    # 2026-09-06 실측: 'sk-' 를 부분 문자열로 찾았더니 task-0001.json 이 걸렸고,
+    # 감사기 자기 소스에 적힌 패턴 목록까지 비밀키로 셌다. 12개 파일이 오탐이었다.
+    # 진짜 키는 접두사 뒤에 충분히 긴 무작위 문자열이 붙는다. 그걸 함께 요구한다.
+    secret_pat = re.compile(
+        r"(?<![\w-])(sk-[A-Za-z0-9]{16,}|ghp_[A-Za-z0-9]{20,}"
+        r"|AIza[A-Za-z0-9_\-]{20,}|xox[baprs]-[A-Za-z0-9-]{10,})")
     checks = [
-        ("계정명", r"(계정명|사용자명|username|account)", sorted(account_names)),
-        ("비밀키", r"(비밀키|시크릿|secret|API ?키|token)",
-         ["sk-", "ghp_", "AIza", "xox"]),
+        ("계정명", r"(계정명|사용자명|username|account)", sorted(account_names), None),
+        ("비밀키", r"(비밀키|시크릿|secret|API ?키|token)", None, secret_pat),
     ]
     try:
         tracked = _git("ls-files").splitlines()
@@ -261,18 +279,24 @@ def r4_zero_claim(body: str) -> list[dict]:
                  "what": "'0건' 주장을 재측정하지 못했다",
                  "how": f"추적 파일 목록을 얻지 못했다 — {exc}",
                  "fix": "git 을 쓸 수 있는 곳에서 다시 검사하라"}]
-    for label, trigger, needles in checks:
+    for label, trigger, needles, pattern in checks:
         if not re.search(trigger, body, re.I):
             continue
         hits = []
         for rel in tracked:
+            # 탐지기 자신은 검사 대상에서 뺀다. 패턴 목록이 곧 적발 대상이 된다.
+            if os.path.basename(rel) == os.path.basename(__file__):
+                continue
             full = os.path.join(HERE, rel)
             try:
                 with open(full, encoding="utf-8", errors="replace") as f:
-                    text = f.read().lower()
+                    text = f.read()
             except Exception:
                 continue
-            if any(n.lower() in text for n in needles):
+            if pattern is not None:
+                if pattern.search(text):
+                    hits.append(rel)
+            elif needles and any(n.lower() in text.lower() for n in needles):
                 hits.append(rel)
         if hits:
             out.append({"rule": "R4", "severity": HIGH,
