@@ -15,25 +15,29 @@ import sys
 from pathlib import Path
 from typing import Any, Dict, List, Set, Tuple
 
-# 프론트엔드 식별 지표 (파일명 또는 상대 경로 패턴)
-FRONTEND_INDICATORS = {
-    "package.json",
+# 프론트엔드 단독 식별 지표 (설정 파일만으로 확실한 프론트엔드)
+FRONTEND_STANDALONE_INDICATORS = {
     "vite.config.ts",
     "vite.config.js",
     "next.config.js",
     "next.config.mjs",
     "nuxt.config.ts",
     "webpack.config.js",
-    "tsconfig.json",
     "index.html",
 }
 
-# 백엔드 식별 지표 (파일명 또는 상대 경로 패턴)
-BACKEND_INDICATORS = {
-    "requirements.txt",
-    "pyproject.toml",
-    "Pipfile",
-    "poetry.lock",
+# 프론트엔드 보조 지표 (내용에 웹 프레임워크가 포함되어야 인정)
+FRONTEND_SECONDARY_INDICATORS = {
+    "package.json",
+    "tsconfig.json",
+}
+
+FRONTEND_FRAMEWORK_KEYWORDS = {
+    "react", "vue", "svelte", "next", "vite", "nuxt", "angular", "solid-js", "preact"
+}
+
+# 백엔드 단독 식별 지표 (인프라 및 서버 전용 언어 설정)
+BACKEND_STANDALONE_INDICATORS = {
     "go.mod",
     "Cargo.toml",
     "pom.xml",
@@ -41,6 +45,22 @@ BACKEND_INDICATORS = {
     "Dockerfile",
     "docker-compose.yml",
 }
+
+# 백엔드 보조 지표 (내용에 웹/서비스 프레임워크가 포함되어야 인정)
+BACKEND_SECONDARY_INDICATORS = {
+    "requirements.txt",
+    "pyproject.toml",
+    "Pipfile",
+    "poetry.lock",
+}
+
+BACKEND_FRAMEWORK_KEYWORDS = {
+    "django", "flask", "fastapi", "uvicorn", "gunicorn", "starlette", "tornado", "celery", "litestar"
+}
+
+# 하위 호환성을 위한 지표 집합
+FRONTEND_INDICATORS = FRONTEND_STANDALONE_INDICATORS | FRONTEND_SECONDARY_INDICATORS
+BACKEND_INDICATORS = BACKEND_STANDALONE_INDICATORS | BACKEND_SECONDARY_INDICATORS
 
 # 스캔에서 무시할 디렉터리 목록
 IGNORED_DIRS = {
@@ -59,8 +79,19 @@ IGNORED_DIRS = {
 }
 
 
+def _file_contains_any_keyword(file_path: Path, keywords: Set[str]) -> bool:
+    """보조 지표 파일 내용에서 프레임워크 키워드 포함 여부를 검사합니다 (최대 64KB)."""
+    try:
+        if not file_path.is_file():
+            return False
+        content = file_path.read_text(encoding="utf-8", errors="ignore")[:65536].lower()
+        return any(kw in content for kw in keywords)
+    except Exception:
+        return False
+
+
 def scan_indicators(root_path: Path) -> Tuple[Set[str], Set[str]]:
-    """프로젝트 루트를 순회하여 프론트/백엔드 지표 파일을 수집한다."""
+    """프로젝트 루트를 순회하여 유효한 프론트/백엔드 지표 파일을 수집한다."""
     root = root_path.resolve()
     found_fe: Set[str] = set()
     found_be: Set[str] = set()
@@ -69,16 +100,26 @@ def scan_indicators(root_path: Path) -> Tuple[Set[str], Set[str]]:
         return found_fe, found_be
 
     for current_dir, dirs, files in os.walk(root):
-        # 무시 디렉터리 필터링 (순회 방지)
         dirs[:] = [d for d in dirs if d not in IGNORED_DIRS and not d.startswith(".")]
         rel_dir = Path(current_dir).relative_to(root)
 
         for f in files:
+            file_abs = Path(current_dir) / f
             rel_file = str(rel_dir / f).replace("\\", "/") if str(rel_dir) != "." else f
-            if f in FRONTEND_INDICATORS or any(rel_file.endswith(ind) for ind in FRONTEND_INDICATORS):
+
+            # 프론트엔드 검사: 단독 지표이거나 보조 지표 + 키워드 포함 시 인정
+            if f in FRONTEND_STANDALONE_INDICATORS or any(rel_file.endswith(ind) for ind in FRONTEND_STANDALONE_INDICATORS):
                 found_fe.add(rel_file)
-            if f in BACKEND_INDICATORS or any(rel_file.endswith(ind) for ind in BACKEND_INDICATORS):
+            elif f in FRONTEND_SECONDARY_INDICATORS or any(rel_file.endswith(ind) for ind in FRONTEND_SECONDARY_INDICATORS):
+                if _file_contains_any_keyword(file_abs, FRONTEND_FRAMEWORK_KEYWORDS):
+                    found_fe.add(rel_file)
+
+            # 백엔드 검사: 단독 지표이거나 보조 지표 + 키워드 포함 시 인정
+            if f in BACKEND_STANDALONE_INDICATORS or any(rel_file.endswith(ind) for ind in BACKEND_STANDALONE_INDICATORS):
                 found_be.add(rel_file)
+            elif f in BACKEND_SECONDARY_INDICATORS or any(rel_file.endswith(ind) for ind in BACKEND_SECONDARY_INDICATORS):
+                if _file_contains_any_keyword(file_abs, BACKEND_FRAMEWORK_KEYWORDS):
+                    found_be.add(rel_file)
 
     return found_fe, found_be
 
@@ -153,6 +194,10 @@ def provision_folders(root_path: Path, force: bool = False) -> Dict[str, Any]:
     be_dir = root / "backend"
 
     for target_dir, label in [(fe_dir, "프론트엔드"), (be_dir, "백엔드")]:
+        target_resolved = target_dir.resolve()
+        if not target_resolved.is_relative_to(root):
+            raise ValueError(f"보안 위험: 프로비저닝 대상 경로가 프로젝트 루트를 벗어났습니다: {target_resolved}")
+
         if not target_dir.exists():
             target_dir.mkdir(parents=True, exist_ok=True)
             readme_file = target_dir / "README.md"

@@ -25,7 +25,7 @@ class TestMIAClassifier(unittest.TestCase):
         self.assertFalse(result["should_split"])
 
     def test_frontend_only_project(self):
-        (self.root / "package.json").write_text('{"name": "fe"}', encoding="utf-8")
+        (self.root / "package.json").write_text('{"name": "fe", "dependencies": {"react": "^18.0"}}', encoding="utf-8")
         (self.root / "index.html").write_text("<!DOCTYPE html>", encoding="utf-8")
 
         result = csc_mia_classifier.evaluate_project(self.root)
@@ -36,7 +36,7 @@ class TestMIAClassifier(unittest.TestCase):
         self.assertIn("index.html", result["frontend_indicators"])
 
     def test_backend_only_project(self):
-        (self.root / "requirements.txt").write_text("pytest>=7.0", encoding="utf-8")
+        (self.root / "requirements.txt").write_text("fastapi>=0.100\nuvicorn", encoding="utf-8")
         (self.root / "Dockerfile").write_text("FROM python:3.11", encoding="utf-8")
 
         result = csc_mia_classifier.evaluate_project(self.root)
@@ -46,8 +46,21 @@ class TestMIAClassifier(unittest.TestCase):
         self.assertIn("requirements.txt", result["backend_indicators"])
         self.assertIn("Dockerfile", result["backend_indicators"])
 
+    def test_node_cli_and_data_science_not_misclassified_as_fullstack(self):
+        # 1. Node CLI 도구 (package.json만 있고 프론트엔드 프레임워크 없음) -> FRONTEND 아님
+        (self.root / "package.json").write_text('{"name": "cli-tool", "dependencies": {"commander": "^10.0"}}', encoding="utf-8")
+        result = csc_mia_classifier.evaluate_project(self.root)
+        self.assertEqual(result["status"], "GENERIC")
+        self.assertFalse(result["is_fullstack"])
+
+        # 2. 데이터 분석 프로젝트 (requirements.txt만 있고 웹 프레임워크 없음) -> BACKEND 아님
+        (self.root / "requirements.txt").write_text("numpy\npandas\njupyter", encoding="utf-8")
+        result = csc_mia_classifier.evaluate_project(self.root)
+        self.assertEqual(result["status"], "GENERIC")
+        self.assertFalse(result["is_fullstack"])
+
     def test_fullstack_unsplit_recommends_split(self):
-        (self.root / "package.json").write_text('{"name": "fe"}', encoding="utf-8")
+        (self.root / "package.json").write_text('{"name": "fe", "dependencies": {"react": "^18.0.0"}}', encoding="utf-8")
         (self.root / "requirements.txt").write_text("fastapi>=0.100", encoding="utf-8")
 
         result = csc_mia_classifier.evaluate_project(self.root)
@@ -58,7 +71,7 @@ class TestMIAClassifier(unittest.TestCase):
         self.assertIsNotNone(result["proposed_paths"]["backend"])
 
     def test_fullstack_already_split(self):
-        (self.root / "package.json").write_text('{"name": "root"}', encoding="utf-8")
+        (self.root / "package.json").write_text('{"name": "root", "dependencies": {"vite": "^4.0"}}', encoding="utf-8")
         (self.root / "requirements.txt").write_text("django", encoding="utf-8")
         (self.root / "frontend").mkdir()
         (self.root / "backend").mkdir()
@@ -76,7 +89,7 @@ class TestMIAClassifier(unittest.TestCase):
         self.assertFalse((self.root / "backend").exists())
 
     def test_provision_succeeds_on_split_recommended(self):
-        (self.root / "package.json").write_text('{"name": "fe"}', encoding="utf-8")
+        (self.root / "package.json").write_text('{"name": "fe", "dependencies": {"vue": "^3.0"}}', encoding="utf-8")
         (self.root / "requirements.txt").write_text("flask", encoding="utf-8")
 
         res = csc_mia_classifier.provision_folders(self.root, force=False)
