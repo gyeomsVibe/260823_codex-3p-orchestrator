@@ -34,12 +34,13 @@ class C3PCouncilOfficialNamingTests(unittest.TestCase):
         self.assertIn(OFFICIAL_TERM, readme)
         self.assertIn("codex-3p-orchestrator", readme)
         self.assertIn(FIRST_MENTION, readme)
-        self.assertIn("Unit_Tests-269_Passed", readme)
+        self.assertIn("Unit_Tests-272_Passed", readme)
         self.assertIn("csc_work_item.py", readme)
         self.assertIn("c3p_local_llm.py", readme)
         self.assertNotIn("Unit_Tests-237_Passed", readme)
         self.assertNotIn("Unit_Tests-267_Passed", readme)
         self.assertNotIn("Unit_Tests-268_Passed", readme)
+        self.assertNotIn("Unit_Tests-269_Passed", readme)
 
     def test_readme_includes_budget_saving_os_section(self) -> None:
         readme = (ROOT / "README.md").read_text(encoding="utf-8")

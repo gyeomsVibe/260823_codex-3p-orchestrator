@@ -55,6 +55,8 @@
 49. `48_C3P_COUNCIL_README_SYNC_WALKTHROUGH.md` — C3P 협의체 공식 명칭 및 리드미·산출물 전수 동기화 완결 결과 보고서
 50. `49_C3P_BUDGET_SAVING_MODE_AND_GIT_COORDINATION_RESEARCH.md` — C3P 협의체(C3P Council) 비대칭 쿼터 예산절약 모드 및 고효율 Git 동시성 조율 심층 연구 보고서
 51. `50_C3P_BUDGET_SAVING_MODE_README_INTEGRATION_WALKTHROUGH.md` — C3P 협의체 비대칭 쿼터 예산절약 모드 리드미 반영 및 269개 테스트 통과 완결 결과 보고서
+52. `51_C3P_WINDOWS_CONCURRENCY_AND_SOCKET_SUPERVISOR_RESEARCH.md` — Windows 동시성 충돌 방어 및 소켓 감시 슈퍼바이저 심층 연구 보고서
+53. `52_C3P_WINDOWS_CONCURRENCY_HEALING_WALKTHROUGH.md` — C3P 협의체 Windows 동시성 충돌 방어 및 소켓 감시 슈퍼바이저 자가 치유 완결 보고서
 
 ## 운영 규칙
 

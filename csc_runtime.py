@@ -33,7 +33,9 @@ def _read_json(path: Path) -> Dict[str, Any]:
 def _creation_flags() -> int:
     if sys.platform != "win32":
         return 0
-    return subprocess.CREATE_NEW_PROCESS_GROUP | subprocess.DETACHED_PROCESS
+    # CREATE_NO_WINDOW hides console window while preserving valid redirected handles.
+    create_no_window = getattr(subprocess, "CREATE_NO_WINDOW", 0x08000000)
+    return subprocess.CREATE_NEW_PROCESS_GROUP | create_no_window
 
 
 def _terminate_pid_tree(pid: int) -> None:
@@ -84,18 +86,19 @@ def ensure_broker(
 
     logs = root / ".agent-swarm" / "logs"
     logs.mkdir(parents=True, exist_ok=True)
-    log_handle = (logs / "broker-runtime.log").open("a", encoding="utf-8")
+    log_path = str(logs / "broker-runtime.log")
+    log_fd = os.open(log_path, os.O_CREAT | os.O_APPEND | os.O_WRONLY)
     try:
         process = popen_factory(
             [sys.executable, str(root / "csc_broker.py"), "--port", str(port)],
             cwd=str(root),
             stdin=subprocess.DEVNULL,
-            stdout=log_handle,
-            stderr=log_handle,
+            stdout=log_fd,
+            stderr=log_fd,
             creationflags=_creation_flags(),
         )
     finally:
-        log_handle.close()
+        os.close(log_fd)
     deadline = time.monotonic() + timeout
     while time.monotonic() < deadline:
         if broker_is_running(root):
@@ -119,11 +122,15 @@ def ensure_worker(
     agent: str,
     project_root: os.PathLike[str] | str,
     popen_factory: Callable[..., subprocess.Popen] = subprocess.Popen,
+    registered_agents: Optional[set[str]] = None,
 ) -> Dict[str, Any]:
     root = Path(project_root).resolve()
     metadata_path = root / ".agent-swarm" / "workers" / f"{agent}.json"
     metadata = _read_json(metadata_path)
-    if worker_is_fresh(agent, root):
+    fresh = worker_is_fresh(agent, root)
+    connected = registered_agents is None or agent in registered_agents
+
+    if fresh and connected:
         return {"agent": agent, "action": "reused", "pid": metadata.get("pid")}
 
     old_pid = metadata.get("pid")
@@ -134,7 +141,10 @@ def ensure_worker(
 
     logs = root / ".agent-swarm" / "logs"
     logs.mkdir(parents=True, exist_ok=True)
-    log_handle = (logs / f"{agent}-worker.log").open("a", encoding="utf-8")
+    log_path = str(logs / f"{agent}-worker.log")
+    log_fd = os.open(log_path, os.O_CREAT | os.O_APPEND | os.O_WRONLY)
+    env = os.environ.copy()
+    env["PYTHONUNBUFFERED"] = "1"
     try:
         process = popen_factory(
             [
@@ -143,12 +153,13 @@ def ensure_worker(
             ],
             cwd=str(root),
             stdin=subprocess.DEVNULL,
-            stdout=log_handle,
-            stderr=log_handle,
+            stdout=log_fd,
+            stderr=log_fd,
             creationflags=_creation_flags(),
+            env=env,
         )
     finally:
-        log_handle.close()
+        os.close(log_fd)
     return {"agent": agent, "action": "started", "pid": process.pid}
 
 
@@ -191,9 +202,16 @@ def activate(
     root = Path(project_root).resolve()
     (root / ".agent-swarm" / "workers").mkdir(parents=True, exist_ok=True)
     broker = ensure_broker(root)
-    workers = [ensure_worker(agent, root) for agent in DEFAULT_AGENTS]
+    initial_roster: set[str] = set()
+    try:
+        initial_roster = set(query_roster(root, timeout=0.5).get("registered_agents", []))
+    except Exception:
+        pass
+    workers = [ensure_worker(agent, root, registered_agents=initial_roster) for agent in DEFAULT_AGENTS]
     expected = set(DEFAULT_AGENTS)
     deadline = time.monotonic() + timeout
+    midpoint = time.monotonic() + (timeout / 2)
+    healed = False
     last_roster: Dict[str, Any] = {}
     while time.monotonic() < deadline:
         try:
@@ -209,6 +227,12 @@ def activate(
                 "workers": workers,
                 "registered_agents": sorted(expected),
             }
+        # 절반 경과 후에도 미등록된 워커가 있으면 강제 재기동 1회 수행 (Self-Healing)
+        if not healed and time.monotonic() > midpoint:
+            missing = expected - registered
+            for missing_agent in missing:
+                ensure_worker(missing_agent, root, registered_agents=registered)
+            healed = True
         time.sleep(poll_interval)
     raise ActivationError(
         "activation timed out: expected live socket registrations and fresh heartbeats "

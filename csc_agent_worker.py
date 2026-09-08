@@ -294,13 +294,18 @@ class RegisteredQueueWorker:
         heartbeat_interval = max(0.05, min(1.0, self.poll_interval * 2))
 
         def maintain_heartbeat() -> None:
+            consecutive_failures = 0
+            max_consecutive_failures = 5
             while not heartbeat_stop.wait(heartbeat_interval):
                 try:
                     self.queue_worker.heartbeat()
+                    consecutive_failures = 0
                 except Exception as exc:
-                    heartbeat_errors.append(exc)
-                    stop.set()
-                    return
+                    consecutive_failures += 1
+                    if consecutive_failures >= max_consecutive_failures:
+                        heartbeat_errors.append(exc)
+                        stop.set()
+                        return
 
         heartbeat_thread = threading.Thread(
             target=maintain_heartbeat,

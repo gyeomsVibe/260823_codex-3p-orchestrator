@@ -29,7 +29,7 @@ def utc_iso() -> str:
     return datetime.now(timezone.utc).isoformat()
 
 
-def _atomic_write_json(path: Path, value: Dict[str, Any]) -> None:
+def _atomic_write_json(path: Path, value: Dict[str, Any], max_attempts: int = 10) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     fd, temporary = tempfile.mkstemp(prefix=path.name + ".", suffix=".tmp", dir=path.parent)
     try:
@@ -38,21 +38,28 @@ def _atomic_write_json(path: Path, value: Dict[str, Any]) -> None:
             handle.write("\n")
             handle.flush()
             os.fsync(handle.fileno())
-        for attempt in range(5):
+        for attempt in range(max_attempts):
             try:
                 os.replace(temporary, path)
-                break
-            except PermissionError:
-                if attempt == 4:
+                return
+            except (PermissionError, OSError) as exc:
+                winerror = getattr(exc, "winerror", None)
+                # Windows WinError 5 (Access Denied) 및 WinError 32 (Sharing Violation) 대응
+                if isinstance(exc, PermissionError) or winerror in (5, 32):
+                    if attempt == max_attempts - 1:
+                        raise
+                    # 지수 백오프: 점진적 대기 시간 증가 (0.015s ~ 최대 0.25s)
+                    time.sleep(min(0.25, 0.015 * (1.5 ** attempt)))
+                else:
                     raise
-                # Windows readers can briefly deny the atomic rename/delete share mode.
-                time.sleep(0.02 * (attempt + 1))
     finally:
-        try:
-            if os.path.exists(temporary):
-                os.remove(temporary)
-        except OSError:
-            pass
+        for _ in range(3):
+            try:
+                if os.path.exists(temporary):
+                    os.remove(temporary)
+                break
+            except OSError:
+                time.sleep(0.01)
 
 
 def _read_json(path: Path, default: Dict[str, Any]) -> Dict[str, Any]:
