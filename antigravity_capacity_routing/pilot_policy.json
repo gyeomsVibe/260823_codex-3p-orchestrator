@@ -1,0 +1,12 @@
+{
+  "policy_version": "c3p-antigravity-capacity-pilot-v1",
+  "min_scarce_token_reduction_pct": 30,
+  "max_wall_time_increase_pct": 20,
+  "max_total_token_multiplier": 5,
+  "min_valid_packet_rate": 1.0,
+  "notes": [
+    "Thresholds are pre-registered pilot decisions, not published performance guarantees.",
+    "The total-token multiplier prevents abundant Antigravity quota from becoming unlimited waste.",
+    "Quality, workspace safety, permission safety, review effort, and availability must also pass."
+  ]
+}

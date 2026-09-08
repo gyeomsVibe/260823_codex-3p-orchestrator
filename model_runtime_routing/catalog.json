@@ -1,0 +1,33 @@
+{
+  "schema_version": "c3p-model-catalog-v1",
+  "observed_at": "2026-09-08T01:49:00+09:00",
+  "platforms": {
+    "codex": {
+      "source": "Codex desktop model inventory and official configuration reference",
+      "tiers": {
+        "economy": {"model": "gpt-5.4-mini", "effort": "low"},
+        "balanced": {"model": "gpt-5.6-luna", "effort": "medium"},
+        "strong": {"model": "gpt-5.6-sol", "effort": "high"},
+        "frontier": {"model": "gpt-6-astra", "effort": "high"}
+      }
+    },
+    "claude": {
+      "source": "Claude Code model configuration documentation",
+      "tiers": {
+        "economy": {"model": "haiku", "effort": "low"},
+        "balanced": {"model": "sonnet", "effort": "medium"},
+        "strong": {"model": "opusplan", "effort": "high"},
+        "frontier": {"model": "opus", "effort": "high"}
+      }
+    },
+    "antigravity": {
+      "source": "Local agy models output on 2026-09-08",
+      "tiers": {
+        "economy": {"model": "gemini-3.8-flash-low", "effort": "low"},
+        "balanced": {"model": "gemini-3.8-flash-medium", "effort": "medium"},
+        "strong": {"model": "gemini-3.8-flash-high", "effort": "high"},
+        "frontier": {"model": "gemini-3.1-pro-high", "effort": "high"}
+      }
+    }
+  }
+}
