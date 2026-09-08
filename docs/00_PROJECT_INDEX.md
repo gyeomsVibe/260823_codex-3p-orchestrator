@@ -49,6 +49,10 @@
 43. `42_C3P_RCS_BENCHMARK_RESULTS.md` — R-C-S 3대 태스크 벤치마크 실측 결과 보고서 (가설적 추정 참고치 명시)
 44. `43_C3P_AUTOMATIC_WORK_COORDINATION_RESEARCH.md` — 펜싱 토큰과 작업 그래프 기초 연구 및 결함 검토
 45. `44_C3P_AUTOMATIC_WORK_COORDINATION_IMPLEMENTATION_AND_EVIDENCE.md` — 공개자료 교차검증, C3P 조율 최종 설계, 실제 명령, 테스트 증거와 단계적 적용 기준
+46. `45_C3P_ATOMIC_COMMIT_AND_PUSH_IMPLEMENTATION_PLAN.md` — MIA 전략절차 기반 원자적 Git Commit 및 Remote Push 실행 계획서
+47. `46_C3P_COORDINATOR_AND_BUDGET_OS_WALKTHROUGH.md` — C3P 협의체 통합 작업 조율기 및 예산 절감 운영체제 커밋·푸시 완료 결과 보고서
+48. `47_C3P_COUNCIL_README_SYNC_IMPLEMENTATION_PLAN.md` — MIA 전략절차 기반 C3P 협의체 정본 명칭 리드미 동기화 실행 계획서
+49. `48_C3P_COUNCIL_README_SYNC_WALKTHROUGH.md` — C3P 협의체 공식 명칭 및 리드미·산출물 전수 동기화 완결 결과 보고서
 
 ## 운영 규칙
 

@@ -1,7 +1,10 @@
 # 🌟 제1장: 프로젝트 정체성 및 비유 (Identity & Metaphor)
 
+> **공식 속칭**: **C3P 협의체(C3P Council, Codex·Claude Code·Antigravity가 함께 검토하고 실행하는 3도구 협업 체계)**  
+> **정식 프로젝트명**: `codex-3p-orchestrator`
+
 ## 1. 한 줄 요약
-**Codex, Claude Code, Antigravity**라는 3대 첨단 AI 도구를 따로따로 쓰며 사람이 중간에서 복사·붙여넣기하던 번거로움을 완전히 없애고, **세 AI가 하나의 몸처럼 유기적으로 대화·검증·감시하며 스스로 코드를 완성하는 시스템**입니다.
+**Codex, Claude Code, Antigravity**라는 3대 첨단 AI 도구를 따로따로 쓰며 사람이 중간에서 복사·붙여넣기하던 번거로움을 완전히 없애고, **세 AI가 C3P 협의체로서 대화·검증·합의하며 스스로 코드를 완성하는 시스템**입니다.
 
 ## 2. 왜 이 시스템을 만들었는가?
 기존에 AI를 혼자 사용하면:

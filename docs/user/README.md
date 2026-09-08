@@ -1,8 +1,9 @@
-# 📁 docs/user — Codex 3P Orchestrator 사용자 및 지도교수 문서 팩 (User & Advisor Package)
+# 📁 docs/user — C3P 협의체(C3P Council) 사용자 및 지도교수 문서 팩 (User & Advisor Package)
 
+> **운영 협의체**: **C3P 협의체 (C3P Council, Codex·Claude Code·Antigravity가 함께 검토하고 실행하는 3도구 협업 체계)**  
 > **정본 워크스페이스**: `D:\D_Workspace_NB\-agentic-ai-workspace\260823_codex-3p-orchestrator`  
 > **규약**: 사용자 우선 원칙 (User-First Principle, `.agent-swarm/USER_FIRST_PRINCIPLE.md`)  
-> **발행일**: 2026-09-07
+> **발행일**: 2026-09-07 (2026-09-09 C3P 협의체 최신화)
 
 ---
 

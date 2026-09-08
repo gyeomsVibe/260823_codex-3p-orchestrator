@@ -1,6 +1,6 @@
-# Agent Swarm Control Plane
+# C3P 협의체 로컬 제어면 (Agent Swarm Control Plane)
 
-이 폴더는 `D:\D_Workspace_NB\-agentic-ai-workspace\260823_codex-3p-orchestrator`에서 Codex, Claude Code, Antigravity가 협업하는 유일한 로컬 제어면(control plane)이다.
+이 폴더는 `D:\D_Workspace_NB\-agentic-ai-workspace\260823_codex-3p-orchestrator`에서 **C3P 협의체(C3P Council, Codex·Claude Code·Antigravity가 함께 검토하고 실행하는 3도구 협업 체계)**가 협업하는 유일한 로컬 제어면(control plane)이다. 자세한 운영 구분은 [docs/35 C3P 협의체 공식 명칭과 바로 쓰는 방법](../docs/35_C3P_COUNCIL_OFFICIAL_NAME_AND_USAGE_GUIDE.md)을 따른다.
 
 `D:\D_Workspace_NB\-agentic-ai-workspace\260823_week3`는 폐기된 경로다. 해당 경로에 `.agent-swarm`, 문서 또는 소스 복사본을 만들지 않는다. CLI 실행 위치가 달라도 `csc.py`가 있는 이 정본 루트를 `project-root`와 자식 프로세스 `cwd`로 사용한다.
 

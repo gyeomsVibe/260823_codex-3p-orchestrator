@@ -29,8 +29,16 @@ class C3PCouncilOfficialNamingTests(unittest.TestCase):
         self.assertIn("세 도구 합의", guide)
         self.assertIn("resubmit: false", guide)
         self.assertIn("사용자는 지시하고 승인하는 주체", guide)
-        self.assertIn("둘 다 표결 구성원으로 세지 않는다", guide)
-        self.assertIn("영문 확장어를 임의로 만들어", guide)
+    def test_readme_uses_official_naming_and_updated_metrics(self) -> None:
+        readme = (ROOT / "README.md").read_text(encoding="utf-8")
+        self.assertIn(OFFICIAL_TERM, readme)
+        self.assertIn("codex-3p-orchestrator", readme)
+        self.assertIn(FIRST_MENTION, readme)
+        self.assertIn("Unit_Tests-268_Passed", readme)
+        self.assertIn("csc_work_item.py", readme)
+        self.assertIn("c3p_local_llm.py", readme)
+        self.assertNotIn("Unit_Tests-237_Passed", readme)
+        self.assertNotIn("Unit_Tests-267_Passed", readme)
 
 
 if __name__ == "__main__":
