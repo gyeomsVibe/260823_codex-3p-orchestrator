@@ -48,7 +48,8 @@ OK (skipped=1)
 ```
 
 - **단위 테스트 무결성**: 269개 테스트 전수 통과 (`Exit Code 0`).
-- **Git 작업 트리 상태**: 의도된 4개 파일 외 불필요한 파일 변경 없음 확인.
+- **Git 작업 트리 상태**: 의도된 5개 파일(`README.md`, `tests/test_c3p_council_official_naming.py`, `docs/00_PROJECT_INDEX.md`, `docs/49`, `docs/50`) 외 불필요한 파일 변경 없음 확인.
+- **C3P 협의체 2자 비상 합의**: 사령관 Codex 휴면(3% 보존) 하에 Claude Code 감사(Audit) 호출 완료. Claude Code가 `HEAD == origin/main == e8a49d6`, 워크트리 clean, 리드미 예산절약 OS 섹션/목차/뱃지(269) 및 회귀 테스트 신설을 기계적으로 확인하고 **ACK / 조건부 AGREE** 회신. (지적된 5개 파일 오기 수정 반영)
 
 ---
 
