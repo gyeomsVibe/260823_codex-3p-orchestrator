@@ -63,6 +63,26 @@ HIGH, MID, LOW = "높음", "중간", "낮음"
 DONE_WORDS = r"(완료|성공|통과|끝냈|구현했|만들었|고쳤|해결했|done|completed|passed)"
 
 
+# ── 단계 전환 ────────────────────────────────────────────────────────────────
+PHASE_FILE = os.path.join(SWARM, "BUILD_PHASE")
+
+
+def build_phase() -> bool:
+    """지금이 '먼저 만드는 단계' 인가.
+
+    사용자 지시(2026-09-07)로 구현을 먼저 끝내고 오류는 나중에 잡기로 했다.
+    그 동안 감사기는 **차단하지 않고 경고만** 한다.
+
+    끄지 않는 이유: 끄면 무엇이 틀렸는지 기록이 남지 않는다.
+    그러면 '나중에 고친다' 의 '나중에' 가 성립하지 않는다.
+    고칠 목록 없이 고칠 수는 없다.
+
+    파일 하나로 전환한다. 숨은 환경변수를 쓰지 않는 이유는,
+    켜졌는지 꺼졌는지 사람이 눈으로 확인할 수 있어야 하기 때문이다.
+    """
+    return os.path.exists(PHASE_FILE)
+
+
 def _rel(path: str) -> str:
     return os.path.relpath(path, HERE).replace("\\", "/")
 
@@ -173,7 +193,7 @@ def r2_line_count(body: str) -> list[dict]:
     """
     out = []
     pat = re.compile(r"([\w][\w./-]{2,60}\.\w{1,6})[^\n]{0,40}?(\d{2,6})\s*(줄|lines?|행)"
-                     r"|(\d{2,6})\s*(?:줄|lines?|행)[^\n]{0,40}?([\w][\w./-]{2,60}\.\w{1,6})")
+                     r"|(\d{2,6})\s*(?:줄|lines?|행)(?:(?!\. |\.$| - |- )[^\n]){0,40}?([\w][\w./-]{2,60}\.\w{1,6})")
     for m in pat.finditer(body):
         path = m.group(1) or m.group(5)
         claimed = m.group(2) or m.group(4)
@@ -370,7 +390,8 @@ def r7_no_limits_declared(body: str, msg_type: str) -> list[dict]:
         return []
     if len(body) < 400:
         return []
-    if re.search(r"(검증되지|미검증|하지 않았|안 했|못 했|미실행|한계|모른|알 수 없)", body):
+    if re.search(r"(검증되지|미검증|하지 않았|안 했|못 했|못한|못했|않은|않았다|"
+                 r"미실행|미확인|재지 않|측정하지|확인하지|한계|모른|알 수 없)", body):
         return []
     return [{"rule": "R7", "severity": LOW,
              "what": "검증된 것만 적고 검증되지 않은 것을 밝히지 않았다",
@@ -414,8 +435,11 @@ def audit(body: str, msg_type: str = "RESULT", sender: str = "") -> dict:
     return {
         "at": datetime.now(timezone.utc).isoformat(),
         "sender": sender, "type": msg_type,
-        "verdict": "차단" if any(f["severity"] == HIGH for f in findings)
-                   else ("경고" if findings else "통과"),
+        # 구현 단계에서는 높은 등급도 막지 않는다. 다만 기록은 그대로 남는다.
+        "verdict": ("경고(구현단계)" if build_phase() and findings
+                    else "차단" if any(f["severity"] == HIGH for f in findings)
+                    else "경고" if findings else "통과"),
+        "phase": "구현" if build_phase() else "검증",
         "findings": findings,
         "checked_rules": sorted(RULES_DESCRIBED),
         "blind_spots": KNOWN_BLIND_SPOTS,
@@ -435,6 +459,7 @@ def report(result: dict) -> str:
     v = result["verdict"]
     head = {"차단": "🔴 발신 차단 — 검증되지 않은 주장이 있습니다",
             "경고": "🟡 경고 — 확인이 필요한 주장이 있습니다",
+            "경고(구현단계)": "🟡 구현 단계 — 막지 않고 보냅니다. 아래는 나중에 고칠 목록입니다",
             "통과": "🟢 검사한 항목에서는 문제를 찾지 못했습니다"}[v]
     lines = [head]
     for f in result["findings"]:

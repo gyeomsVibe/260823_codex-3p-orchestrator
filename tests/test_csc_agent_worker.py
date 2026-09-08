@@ -98,6 +98,78 @@ class TestBoundedCliExecutor(unittest.TestCase):
             executor({"message_id": "T2", "body": "slow"})
         terminator.assert_called_once_with(process)
 
+    def test_antigravity_stream_json_returns_response_and_records_usage(self):
+        raw = (
+            '{"event":"init","conversation_id":"conv-1","init":{}}\n'
+            '{"event":"result","result":{"conversation_id":"conv-1","status":"SUCCESS",'
+            '"response":"evidence ready","duration_seconds":2.5,"num_turns":1,'
+            '"usage":{"input_tokens":100,"output_tokens":20,"thinking_tokens":5,'
+            '"cache_read_tokens":10,"total_tokens":120}}}\n'
+        )
+        popen = Mock(return_value=FakeProcess(stdout=raw))
+        recorder = Mock(return_value=PROJECT_ROOT / "telemetry.jsonl")
+        executor = BoundedCliExecutor(
+            "antigravity", PROJECT_ROOT, popen_factory=popen, telemetry_recorder=recorder,
+        )
+
+        result = executor({"message_id": "T3", "correlation_id": "C3", "body": "inspect"})
+
+        self.assertEqual(result, "evidence ready")
+        command = popen.call_args.args[0]
+        self.assertEqual(command[command.index("--output-format") + 1], "stream-json")
+        self.assertNotIn("--dangerously-skip-permissions", command)
+        controlled_prompt = command[command.index("--print") + 1]
+        self.assertIn("Do not invoke a terminal or shell", controlled_prompt)
+        self.assertIn("Do not create, modify, rename, or delete files", controlled_prompt)
+        self.assertTrue(controlled_prompt.endswith("inspect"))
+        record = recorder.call_args.args[0]
+        self.assertEqual(record["message_id"], "T3")
+        self.assertEqual(record["correlation_id"], "C3")
+        self.assertEqual(record["usage"]["total_tokens"], 120)
+        self.assertNotIn("response", record)
+
+    def test_antigravity_invalid_stream_fails_closed_without_recording(self):
+        popen = Mock(return_value=FakeProcess(stdout="not json"))
+        recorder = Mock()
+        executor = BoundedCliExecutor(
+            "antigravity", PROJECT_ROOT, popen_factory=popen, telemetry_recorder=recorder,
+        )
+
+        with self.assertRaisesRegex(RuntimeError, "invalid stream-json telemetry"):
+            executor({"message_id": "T4", "body": "inspect"})
+        recorder.assert_not_called()
+
+    def test_antigravity_stream_quota_error_is_classified(self):
+        raw = (
+            '{"event":"result","result":{"conversation_id":"conv-2","status":"ERROR",'
+            '"response":"","error":"usage limit reached; resets 2:03am",'
+            '"duration_seconds":1,"num_turns":0,"usage":{"total_tokens":0}}}\n'
+        )
+        popen = Mock(return_value=FakeProcess(stdout=raw))
+        executor = BoundedCliExecutor("antigravity", PROJECT_ROOT, popen_factory=popen)
+
+        with self.assertRaises(AgentUnavailable) as caught:
+            executor({"message_id": "T5", "body": "inspect"})
+        self.assertEqual(caught.exception.availability_code, "quota_exhausted")
+
+    def test_antigravity_denied_action_is_not_accepted_as_success(self):
+        raw = (
+            '{"event":"result","result":{"conversation_id":"conv-3","status":"SUCCESS",'
+            '"response":"","denied_actions":[{"action":"escalate_admin",'
+            '"display_name":"Bash"}],"duration_seconds":3,"num_turns":1,'
+            '"usage":{"input_tokens":20740,"output_tokens":466,"total_tokens":21206}}}\n'
+        )
+        popen = Mock(return_value=FakeProcess(stdout=raw))
+        recorder = Mock()
+        executor = BoundedCliExecutor(
+            "antigravity", PROJECT_ROOT, popen_factory=popen, telemetry_recorder=recorder,
+        )
+
+        with self.assertRaises(AgentUnavailable) as caught:
+            executor({"message_id": "T6", "body": "inspect"})
+        self.assertEqual(caught.exception.availability_code, "permission_denied")
+        recorder.assert_not_called()
+
 
 class TestRegisteredQueueWorker(unittest.IsolatedAsyncioTestCase):
     async def asyncSetUp(self):

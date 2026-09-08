@@ -10,6 +10,7 @@ from unittest.mock import patch
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(PROJECT_ROOT))
 
+from csc_auth import verify_envelope
 from csc_storage import persist_message
 from csc_worker import QueueWorker, WorkerAlreadyRunning, _atomic_write_json, pid_is_alive
 
@@ -105,6 +106,61 @@ class TestQueueWorker(unittest.TestCase):
         dlq = self.records(self.root / ".agent-swarm/dead-letter/claude.jsonl")
         self.assertEqual(len(dlq), 1)
         self.assertEqual(dlq[0]["in_reply_to"], "BAD")
+        self.assertTrue(dlq[0].get("blocked_id", "").startswith("BLOCKED-"))
+
+        queue = self.records(self.root / ".agent-swarm/messages/queue.jsonl")
+        blocked = [r for r in queue if r.get("type") == "BLOCKED"]
+        self.assertEqual(len(blocked), 1)
+        self.assertEqual(blocked[0]["message_id"], dlq[0]["blocked_id"])
+        self.assertEqual(blocked[0]["in_reply_to"], "BAD")
+        self.assertEqual(blocked[0]["failure_code"], "retry_exhausted")
+
+    def test_authenticated_retry_exhaustion_emits_signed_blocked(self):
+        auth_key = b"k" * 32
+        auth_epoch = "epoch-1"
+
+        def failing(message):
+            raise RuntimeError("authenticated poison")
+
+        worker = QueueWorker(
+            "claude",
+            self.root,
+            executor=failing,
+            max_attempts=1,
+            auth_key=auth_key,
+            auth_epoch=auth_epoch,
+            require_authenticated=True,
+        )
+        persist_message(
+            {
+                "message_id": "AUTH-POISON",
+                "sender": "codex",
+                "recipient": "claude",
+                "type": "TASK",
+                "body": "fail me",
+            },
+            base_dir=str(self.root / ".agent-swarm"),
+            signing_key=auth_key,
+            auth_epoch=auth_epoch,
+            require_authenticated=True,
+        )
+
+        self.assertEqual(worker.process_available(), 1)
+
+        dlq = self.records(self.root / ".agent-swarm/dead-letter/claude.jsonl")
+        self.assertEqual(len(dlq), 1)
+        self.assertEqual(dlq[0]["in_reply_to"], "AUTH-POISON")
+        blocked_id = dlq[0]["blocked_id"]
+
+        queue = self.records(self.root / ".agent-swarm/messages/queue.jsonl")
+        blocked = [r for r in queue if r.get("type") == "BLOCKED"]
+        self.assertEqual(len(blocked), 1)
+        self.assertEqual(blocked[0]["message_id"], blocked_id)
+        self.assertEqual(blocked[0]["failure_code"], "retry_exhausted")
+
+        # Must verify against the auth key and epoch
+        verified = verify_envelope(blocked[0], auth_key, auth_epoch)
+        self.assertEqual(verified["message_id"], blocked_id)
 
     def test_live_slot_rejected_stale_slot_replaced_and_heartbeat(self):
         worker = QueueWorker("claude", self.root, stale_after=60)

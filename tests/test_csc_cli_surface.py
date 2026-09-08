@@ -3,7 +3,10 @@ import os
 import subprocess
 import sys
 import tempfile
+import time
 import unittest
+from contextlib import redirect_stdout
+from io import StringIO
 from pathlib import Path
 from unittest.mock import patch
 
@@ -94,6 +97,75 @@ class TestCscCliSurface(unittest.TestCase):
             )
             self.assertEqual(set(replies), {"claude", "antigravity"})
             self.assertEqual(replies["antigravity"]["type"], "BLOCKED")
+
+    def test_wait_for_replies_fails_immediately_on_matching_dead_letter(self):
+        with tempfile.TemporaryDirectory() as temp:
+            swarm = Path(temp) / ".agent-swarm"
+            queue = swarm / "messages" / "queue.jsonl"
+            queue.parent.mkdir(parents=True)
+            queue.write_text("", encoding="utf-8")
+            dlq = swarm / "dead-letter" / "claude.jsonl"
+            dlq.parent.mkdir(parents=True)
+            dlq.write_text(json.dumps({
+                "message_id": "DLQ-1",
+                "sender": "claude",
+                "recipient": "codex",
+                "type": "DEAD_LETTER",
+                "in_reply_to": "TASK-FAILED",
+                "body": "failed after 3 attempts: Reached max turns (6)",
+            }) + "\n", encoding="utf-8")
+
+            started = time.monotonic()
+            with self.assertRaises(csc.TaskExecutionFailed) as raised:
+                wait_for_replies(
+                    "TASK-FAILED", {"claude"}, queue,
+                    timeout=5.0, poll_interval=0.01,
+                )
+
+            self.assertLess(time.monotonic() - started, 0.5)
+            self.assertIn("claude", str(raised.exception))
+            self.assertIn("Reached max turns (6)", str(raised.exception))
+
+    def test_pending_window_does_not_prevent_late_result_recovery(self):
+        with tempfile.TemporaryDirectory() as temp:
+            queue = Path(temp) / ".agent-swarm" / "messages" / "queue.jsonl"
+            queue.parent.mkdir(parents=True)
+            queue.write_text("", encoding="utf-8")
+
+            with self.assertRaises(csc.AwaitPending) as raised:
+                wait_for_replies(
+                    "TASK-LATE", {"claude"}, queue,
+                    timeout=0.02, poll_interval=0.005,
+                )
+            self.assertEqual(raised.exception.missing, ["claude"])
+
+            queue.write_text(json.dumps({
+                "message_id": "RESULT-LATE",
+                "sender": "claude",
+                "recipient": "codex",
+                "type": "RESULT",
+                "in_reply_to": "TASK-LATE",
+                "body": "late but valid",
+            }) + "\n", encoding="utf-8")
+
+            replies = wait_for_replies(
+                "TASK-LATE", {"claude"}, queue,
+                timeout=0.1, poll_interval=0.005,
+            )
+            self.assertEqual(replies["claude"]["message_id"], "RESULT-LATE")
+
+    def test_cli_pending_is_structured_success_and_forbids_resubmit(self):
+        pending = csc.AwaitPending("TASK-1", {"claude"}, {}, 12.5)
+        stdout = StringIO()
+        argv = ["csc.py", "await", "--task-id", "TASK-1", "--agents", "claude"]
+        with patch.object(sys, "argv", argv), \
+                patch.object(csc, "wait_for_replies", side_effect=pending), \
+                redirect_stdout(stdout):
+            csc.main()
+        payload = json.loads(stdout.getvalue())
+        self.assertEqual(payload["status"], "PENDING")
+        self.assertFalse(payload["resubmit"])
+        self.assertEqual(payload["missing_agents"], ["claude"])
 
 
 if __name__ == "__main__":

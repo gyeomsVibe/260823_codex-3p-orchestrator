@@ -14,6 +14,7 @@ from __future__ import annotations
 import os
 import sys
 import unittest
+from unittest import mock
 
 PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, PROJECT_ROOT)
@@ -100,9 +101,33 @@ class TestAuditorIsHonestAboutItself(unittest.TestCase):
                 self.assertTrue(f["how"].strip(), "확인 방법이 없다")
                 self.assertTrue(f["fix"].strip(), "해야 할 일이 없다")
 
-    def test_high_severity_blocks_but_low_does_not(self):
-        self.assertEqual(csc_audit.audit("src/app.py 구현 완료", "RESULT")["verdict"], "차단")
-        self.assertEqual(csc_audit.audit("이 부분 어떻게 생각해?", "PROPOSAL")["verdict"], "통과")
+    def test_high_severity_blocks_when_not_in_build_phase(self):
+        """검증 단계에서는 높은 등급이 발신을 막는다."""
+        with mock.patch.object(csc_audit, "build_phase", return_value=False):
+            self.assertEqual(csc_audit.audit("src/app.py 구현 완료", "RESULT")["verdict"], "차단")
+            self.assertEqual(csc_audit.audit("이 부분 어떻게 생각해?", "PROPOSAL")["verdict"], "통과")
+
+    def test_build_phase_warns_instead_of_blocking_but_still_records(self):
+        """구현 단계에서는 막지 않는다. 다만 지적 목록은 그대로 남아야 한다.
+
+        사용자 지시(2026-09-07): 할루시네이션을 용인하고 먼저 구현한 뒤 나중에 고친다.
+
+        여기서 반드시 지켜야 할 것은 **지적이 사라지지 않는 것**이다.
+        막지 않는 것과 못 본 척하는 것은 다르다. 지적이 사라지면
+        '나중에 고친다' 의 '나중에' 가 성립하지 않는다 — 고칠 목록이 없어지므로.
+        """
+        with mock.patch.object(csc_audit, "build_phase", return_value=True):
+            result = csc_audit.audit("src/app.py 구현 완료", "RESULT")
+        self.assertEqual(result["verdict"], "경고(구현단계)", "구현 단계에서 막고 있다")
+        self.assertTrue(result["findings"], "막지 않는다고 지적까지 지우면 안 된다")
+        self.assertTrue(any(f["severity"] == csc_audit.HIGH for f in result["findings"]),
+                        "높은 등급 지적이 등급까지 낮아져선 안 된다")
+        self.assertEqual(result["phase"], "구현")
+
+    def test_phase_switch_is_a_visible_file_not_a_hidden_flag(self):
+        """전환이 눈에 보여야 한다. 숨은 환경변수면 켜졌는지 알 수 없다."""
+        self.assertTrue(csc_audit.PHASE_FILE.endswith("BUILD_PHASE"))
+        self.assertEqual(csc_audit.build_phase(), os.path.exists(csc_audit.PHASE_FILE))
 
     def test_selftest_passes(self):
         import contextlib

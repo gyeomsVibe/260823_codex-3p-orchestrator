@@ -323,6 +323,8 @@ def send_message(
         csc_audit.record(_verdict)
         if _verdict["findings"]:
             print(csc_audit.report(_verdict), file=sys.stderr)
+        # 구현 단계에서는 '경고(구현단계)' 로 내려오므로 여기서 걸리지 않는다.
+        # 지적은 claim_audit.jsonl 에 그대로 쌓여 수정 단계의 작업 목록이 된다.
         if _verdict["verdict"] == "차단":
             raise ValueError(
                 "발신 차단: 재측정에서 어긋난 주장이 있다. "
@@ -380,6 +382,59 @@ def send_message(
     print(f"📨 [CSC Message] {msg_id} ({msg_type}) sent from '{sender}' to '{recipient}' [{delivery_mode}].")
     return msg_id
 
+
+class TaskExecutionFailed(RuntimeError):
+    """Raised when an expected worker has terminally dead-lettered a TASK."""
+
+    def __init__(self, task_id: str, failures):
+        self.task_id = task_id
+        self.failures = dict(failures)
+        details = "; ".join(
+            f"{agent}: {str(record.get('body', 'unknown failure'))[:500]}"
+            for agent, record in sorted(self.failures.items())
+        )
+        super().__init__(f"task {task_id} failed: {details}")
+
+
+class AwaitPending(RuntimeError):
+    """The observation window ended while the TASK may still be running."""
+
+    def __init__(self, task_id: str, missing, replies, elapsed_seconds: float):
+        self.task_id = task_id
+        self.missing = sorted(str(agent) for agent in missing)
+        self.replies = dict(replies)
+        self.elapsed_seconds = max(0.0, float(elapsed_seconds))
+        super().__init__(
+            f"task {task_id} is still pending for {self.missing}; do not resubmit"
+        )
+
+
+def _dead_letter_replies(task_id: str, expected, queue_path: Path):
+    """Return terminal worker failures for one TASK from the durable DLQ."""
+    dead_letter_dir = queue_path.parent.parent / "dead-letter"
+    failures = {}
+    for agent in sorted(expected):
+        dlq_path = dead_letter_dir / f"{agent}.jsonl"
+        if not dlq_path.exists():
+            continue
+        try:
+            lines = dlq_path.read_text(encoding="utf-8", errors="replace").splitlines()
+        except OSError:
+            continue
+        for line in lines:
+            try:
+                record = json.loads(line)
+            except (ValueError, TypeError):
+                continue
+            if (
+                isinstance(record, dict)
+                and str(record.get("sender", "")).lower() == agent
+                and record.get("in_reply_to") == task_id
+                and record.get("type") == "DEAD_LETTER"
+            ):
+                failures[agent] = record
+    return failures
+
 def wait_for_replies(
     task_id: str,
     expected_agents,
@@ -391,10 +446,11 @@ def wait_for_replies(
     require_authenticated: bool = False,
     replay_window=None,
 ):
-    """Boundedly wait for RESULT or BLOCKED replies to one TASK."""
+    """Wait for replies, failing immediately when a worker dead-letters the TASK."""
     expected = {str(agent).lower() for agent in expected_agents}
     path = Path(queue_path or (Path(SWARM_DIR) / "messages" / "queue.jsonl"))
-    deadline = time.monotonic() + timeout
+    started = time.monotonic()
+    deadline = started + timeout
     replies = {}
     if require_authenticated and (auth_key is None or not auth_epoch):
         raise ValueError("authenticated await requires auth_key and auth_epoch")
@@ -431,9 +487,15 @@ def wait_for_replies(
                 replies[sender] = record
             if expected.issubset(replies):
                 return replies
+        # DLQ records are local terminal execution evidence. Authenticated mode
+        # deliberately ignores them because the current DLQ format is unsigned.
+        if not require_authenticated:
+            failures = _dead_letter_replies(task_id, expected, path)
+            if failures:
+                raise TaskExecutionFailed(task_id, failures)
         time.sleep(poll_interval)
     missing = sorted(expected.difference(replies))
-    raise TimeoutError(f"timed out waiting for {missing} on task {task_id}")
+    raise AwaitPending(task_id, missing, replies, time.monotonic() - started)
 
 
 def _pid_alive(pid):
@@ -695,7 +757,7 @@ def main():
     activate_parser.add_argument("--timeout", type=float, default=10.0, help="Readiness deadline in seconds")
     subparsers.add_parser("roster", help="Show live broker socket registrations")
 
-    await_parser = subparsers.add_parser("await", help="Wait for bounded TASK replies")
+    await_parser = subparsers.add_parser("await", help="Observe TASK replies for a bounded window")
     await_parser.add_argument("--task-id", required=True)
     await_parser.add_argument("--agents", nargs="+", default=["claude", "antigravity"])
     await_parser.add_argument("--timeout", type=float, default=120.0)
@@ -758,7 +820,16 @@ def main():
                 args.task_id, set(args.agents), timeout=args.timeout,
             )
             print(json.dumps(replies, ensure_ascii=False, indent=2))
-        except TimeoutError as exc:
+        except AwaitPending as pending:
+            print(json.dumps({
+                "status": "PENDING",
+                "task_id": pending.task_id,
+                "missing_agents": pending.missing,
+                "received_agents": sorted(pending.replies),
+                "elapsed_seconds": round(pending.elapsed_seconds, 3),
+                "resubmit": False,
+            }, ensure_ascii=False, indent=2))
+        except TaskExecutionFailed as exc:
             print(f"❌ [CSC Await] {exc}", file=sys.stderr)
             sys.exit(1)
     elif args.command == "broker":

@@ -234,10 +234,10 @@ class QueueWorker:
             require_authenticated=self.require_authenticated,
         )
 
-    def _dead_letter(self, message: Dict[str, Any], error: Exception, attempts: int) -> None:
+    def _dead_letter(self, message: Dict[str, Any], error: Exception, attempts: int, blocked_id: Optional[str] = None) -> None:
         source_id = str(message.get("message_id") or "unknown")
         digest = hashlib.sha256(f"{self.agent}|{source_id}".encode()).hexdigest()[:24]
-        append_once(str(self.dlq_path), {
+        record: Dict[str, Any] = {
             "message_id": f"DLQ-{digest}",
             "sender": self.agent,
             "recipient": "codex",
@@ -246,25 +246,43 @@ class QueueWorker:
             "correlation_id": message.get("correlation_id", source_id),
             "body": f"failed after {attempts} attempts: {type(error).__name__}: {error}",
             "original_message": message,
-        })
+        }
+        if blocked_id:
+            record["blocked_id"] = blocked_id
+        append_once(str(self.dlq_path), record)
 
-    def _persist_blocked(self, message: Dict[str, Any], error: Exception, code: str) -> None:
+    def _persist_blocked(
+        self,
+        message: Dict[str, Any],
+        error: Exception,
+        code: Optional[str] = None,
+        failure_code: Optional[str] = None,
+    ) -> str:
         source_id = str(message.get("message_id") or "unknown")
-        digest = hashlib.sha256(f"{self.agent}|{source_id}|{code}".encode()).hexdigest()[:24]
-        persist_message({
-            "message_id": f"BLOCKED-{digest}",
+        discriminator = str(code or failure_code or "blocked")
+        digest = hashlib.sha256(f"{self.agent}|{source_id}|{discriminator}".encode()).hexdigest()[:24]
+        blocked_id = f"BLOCKED-{digest}"
+        payload: Dict[str, Any] = {
+            "message_id": blocked_id,
             "sender": self.agent,
-            "recipient": "codex",
+            "recipient": message.get("sender", "codex"),
             "type": "BLOCKED",
             "in_reply_to": source_id,
             "correlation_id": message.get("correlation_id", source_id),
-            "availability_code": code,
             "body": str(error)[:500],
-        }, base_dir=str(self.swarm_dir),
+        }
+        if code:
+            payload["availability_code"] = code
+        if failure_code:
+            payload["failure_code"] = failure_code
+        persist_message(
+            payload,
+            base_dir=str(self.swarm_dir),
             signing_key=self.auth_key,
             auth_epoch=self.auth_epoch,
             require_authenticated=self.require_authenticated,
         )
+        return blocked_id
 
     def _audit_auth_rejection(self, message: Dict[str, Any], error: Exception) -> None:
         """Record metadata only; never preserve attacker-controlled body/auth data."""
@@ -371,20 +389,20 @@ class QueueWorker:
         message_id = str(message["message_id"])
         availability_code = str(getattr(error, "availability_code", "")).strip().lower()
         if availability_code:
-            self._persist_blocked(message, error, availability_code)
+            self._persist_blocked(message, error, code=availability_code)
             state["attempts"].pop(message_id, None)
             state["processed_ids"].append(message_id)
             state["offset"] = next_offset
             self._save_state(state)
             return True
 
-
         attempts = int(state["attempts"].get(message_id, 0)) + 1
         state["attempts"][message_id] = attempts
         if attempts < self.max_attempts:
             self._save_state(state)
             return False
-        self._dead_letter(message, error, attempts)
+        blocked_id = self._persist_blocked(message, error, failure_code="retry_exhausted")
+        self._dead_letter(message, error, attempts, blocked_id=blocked_id)
         state["attempts"].pop(message_id, None)
         state["processed_ids"].append(message_id)
         state["offset"] = next_offset

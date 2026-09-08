@@ -151,6 +151,44 @@ SUPPRESS_HINTS = re.compile(
     r"no\s+secret|has\s+no\s+secret|없어야|않는다|말아야|위험하다|취약", re.I)
 
 
+# 지표로 쓰인 위험어를 공격으로 오인하지 않기 위한 두 번째 억제 신호.
+#
+# 실측 근거 (2026-09-07): Codex 가 파일럿 성공 기준으로 쓴
+#   "무단 쓰기·승인 우회 0건이다"
+# 가 '승인우회' 인젝션으로 보고됐다. 뜻은 정반대다 — 우회가 0건이어야 한다는 조건이다.
+#
+# 기존 SUPPRESS_HINTS 는 '금지·차단' 같은 방어 낱말만 안다.
+# 위험어 뒤에 붙는 '0건 / 없음' 같은 계측 표현은 모른다.
+# 그래서 위험어 바로 뒤(12자 이내)에 '0건·0회·없음' 이 오면 지표로 본다.
+#
+# 왜 좁게 잡는가: 인젝션 경보는 절대 무시되면 안 되는 경보다.
+# 그런 경보가 정상 메시지에 울리면 사람은 곧 전부 무시한다.
+# 그래서 억제는 '바로 뒤' 로만 제한하고 줄 전체로 넓히지 않는다.
+ZERO_METRIC = re.compile(r"^\s*(?:는|은|이|가|를|을|:|：)?\s*0\s*(?:건|회|번)|^\s*없(?:음|다|었)")
+
+
+# 위험 플래그를 '금지하는 문장' 을 공격으로 오인하지 않기 위한 세 번째 억제 신호.
+#
+# 실측 근거 (2026-09-08): 인젝션 경보 4건이 전부 오탐이었다. 내용은 이런 것들이다.
+#   "--dangerously-skip-permissions 금지"
+#   "--dangerously-skip-permissions 는 쓰지 않는다"
+#   "금지  --dangerously-skip-permissions"
+# 셋 다 그 플래그를 쓰지 말자는 문장이다. 뜻이 정반대인데 경보가 울렸다.
+#
+# 위험명령 계열은 원래 SUPPRESS_HINTS 를 일부러 무시한다. 맥락과 무관하게 보고하려는
+# 설계였다. 그 판단 자체는 옳다 - 위험명령은 함부로 덮으면 안 된다.
+# 문제는 우리가 '그 플래그를 금지한다' 는 문서를 쓰기 시작하면서 100% 오탐이 됐다는 것이다.
+# 인젝션 경보는 절대 무시되면 안 되는 경보다. 늘 울리면 아무도 안 읽는다.
+#
+# 그래서 아주 좁게만 억제한다: 금지어가 위험어에 '붙어' 있을 때만.
+#   뒤 20자 안에 금지 표현이 오거나, 앞 12자 안에 금지 표현이 있을 때.
+# 떨어져 있으면 억제하지 않는다. "쓰지 마라. 그런데 여기 명령이 있다" 같은 문장을 덮지 않기 위해서다.
+DANGER_PROHIBITED_AFTER = re.compile(
+    r"^[^\n]{0,20}?(금지|쓰지\s*않|사용하지\s*않|사용\s*안|쓰면\s*안|하지\s*마|안\s*쓴다)")
+DANGER_PROHIBITED_BEFORE = re.compile(
+    r"(금지|사용\s*금지|쓰지\s*마라|never\s+use|must\s+not\s+use)[^\n]{0,12}$", re.I)
+
+
 def scan_untrusted(path):
     """파일에서 인젝션 시도를 찾는다. 페이로드는 반환하지 않는다.
 
@@ -171,6 +209,17 @@ def scan_untrusted(path):
             # 단, 명백한 위험명령은 맥락과 무관하게 보고한다.
             if name != "위험명령" and SUPPRESS_HINTS.search(line):
                 break
+            # 위험어가 '0건·없음' 으로 세어진 지표라면 지시가 아니라 기준이다.
+            if name != "위험명령":
+                m = rx.search(line)
+                if m and ZERO_METRIC.search(line[m.end():m.end() + 12]):
+                    break
+            # 위험명령이라도 '이것을 쓰지 마라' 는 문장이면 지시가 아니라 금지 규정이다.
+            else:
+                m = rx.search(line)
+                if m and (DANGER_PROHIBITED_AFTER.search(line[m.end():])
+                          or DANGER_PROHIBITED_BEFORE.search(line[:m.start()])):
+                    break
             findings.append((name, lineno))
             break
     return findings
@@ -178,7 +227,9 @@ def scan_untrusted(path):
 
 def cmd_notify():
     """새 메시지가 있으면 그 사실을 모델 컨텍스트에 주입한다 (까톡)."""
-    _refresh_viewer()
+    # 갱신은 30분 스케줄러가 맡는다. 여기서 부르지 않는다 —
+    # 이 훅은 자주 불리고, 갱신 1회에 1.3초가 든다.
+    # 아무도 보지 않는 페이지를 계속 다시 그릴 이유가 없다.
     cursor = _load_state("cursor.json")
     new = []
     for path in _swarm_files():
@@ -385,14 +436,16 @@ def _refresh_viewer():
     아무도 일하지 않으면 갱신도 멈추지만, 그때는 바뀔 것이 없다.
     """
     try:
-        # 이원 체계: 도구용 원문 뷰어와 사용자용 대시보드를 함께 갱신한다.
-        #   csc_viewer.py    기술 상세 — 우리가 본다
-        #   csc_dashboard.py 한국어 감시판 — 사용자가 본다 (USER_FIRST_PRINCIPLE)
-        for script, argv in (("csc_viewer.py", ["html"]), ("csc_dashboard.py", [])):
-            path = os.path.join(ROOT, script)
-            if not os.path.exists(path):
-                continue
-            subprocess.run([sys.executable, path] + argv,
+        # 대화 로그만 만든다. 감시판(dashboard)은 만들지 않는다.
+        #
+        # 사용자 지시 (2026-09-07): "사용자용 대시보드는 만들지 않는다.
+        # 대화로그만 생성한다. 이유: 토큰 등 예산낭비 방지."
+        #
+        # csc_dashboard.py 는 지우지 않았다. 만들기를 멈출 뿐이다.
+        # 판단이 바뀌면 이 한 줄만 되돌리면 된다.
+        path = os.path.join(ROOT, "csc_viewer.py")
+        if os.path.exists(path):
+            subprocess.run([sys.executable, path, "html"],
                            stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
                            timeout=25, cwd=ROOT)
     except Exception:
@@ -411,7 +464,9 @@ def cmd_channel_watch():
                if name in baseline and baseline[name] != h
                and not _mine(_owner_of(name))]
     _save_state("channel_hashes.json", current)
-    _refresh_viewer()
+    # 갱신은 30분 스케줄러가 맡는다. 여기서 부르지 않는다 —
+    # 이 훅은 자주 불리고, 갱신 1회에 1.3초가 든다.
+    # 아무도 보지 않는 페이지를 계속 다시 그릴 이유가 없다.
     if not changed:
         _out({"suppressOutput": True})
 
@@ -489,24 +544,173 @@ def cmd_evidence():
     _out({"suppressOutput": True})
 
 
+def _clinic_note():
+    """고치는 단계면 마지막 진단 결과를 한 줄로 돌려준다. 만드는 단계면 아무것도 안 한다.
+
+    진단을 여기서 직접 돌리지 않는 이유: 한 번에 22초가 걸린다.
+    세션을 켤 때마다 22초를 기다리게 하면 사람은 도구를 끈다.
+    그래서 읽기만 한다. 실행은 사용자나 스케줄러가 한다.
+
+    '한 번도 안 돌았다' 와 '돌았는데 이상 없다' 는 반드시 구분한다.
+    구분하지 않으면 진단이 죽어 있어도 건강해 보인다.
+    """
+    if os.path.exists(os.path.join(SWARM, "BUILD_PHASE")):
+        return []          # 만드는 단계. 진단할 때가 아니다
+
+    log = os.path.join(SWARM, "clinic_runs.jsonl")
+    last = None
+    try:
+        with open(log, encoding="utf-8", errors="replace") as f:
+            for line in f:
+                line = line.strip()
+                if line:
+                    try:
+                        last = json.loads(line)
+                    except Exception:
+                        pass
+    except FileNotFoundError:
+        pass
+
+    if last is None:
+        return ["",
+                "🔧 고치는 단계입니다. 그런데 **진단이 한 번도 돌지 않았습니다.**",
+                "   python csc_clinic.py 를 실행하세요.",
+                "   기록이 없는 것은 이상이 없다는 뜻이 아닙니다."]
+
+    icon = {"OK": "🟢", "WARNING": "🟡", "ERROR": "🔴"}.get(last.get("status"), "⚪")
+    head = (f"{icon} 마지막 자가진단: {last.get('status')} "
+            f"(건강도 {last.get('health_percent', '?')}%, {str(last.get('at'))[:16]})")
+    lines = ["", "🔧 고치는 단계입니다.", "   " + head]
+
+    for r in last.get("results", []):
+        if r.get("status") != "OK":
+            first = str(r.get("details", "")).split("\n")[0]
+            lines.append(f"   · {r.get('name')} — {first}")
+    lines.append("   다시 돌리려면 python csc_clinic.py")
+    return lines
+
+
+def _unresolved_blocks():
+    """지금 막혀 있는 안건 수. 과거에 막혔던 기록은 세지 않는다.
+
+    2026-09-07 교정: 이전 구현은 `|BLOCKED|` 를 정규식으로 세어
+    과거 메시지의 머리글까지 셌다. 그래서 실제 0건인데 3건이라고 알렸다.
+
+    거짓 빨간불은 거짓 초록불만큼 위험하다. 켤 때마다 없는 경고가 뜨면
+    사람은 곧 그 경고를 읽지 않게 되고, 진짜일 때도 지나친다.
+
+    판정 출처는 GOVERNANCE 9절 표 하나뿐이다. csc_dashboard 와 같은 규칙을 쓴다 —
+    같은 값을 두 곳에서 다르게 세면 어느 쪽을 믿을지 알 수 없다.
+    """
+    path = os.path.join(SWARM, "GOVERNANCE.md")
+    try:
+        with open(path, encoding="utf-8", errors="replace") as f:
+            # 표의 행(| 로 시작)만 본다. 설명 문장 속 '미해소' 언급은 안건이 아니다.
+            return sum(1 for ln in f
+                       if ln.startswith("|") and ("미해소" in ln or "미응답" in ln))
+    except Exception:
+        return 0
+
+
+def _unread_for_me():
+    """내 앞으로 온 것 중 내가 아직 답하지 않은 메시지를 센다.
+
+    '커서 이후' 가 아니라 '내가 마지막으로 발신한 시각 이후' 를 기준으로 삼는다.
+    커서 파일은 워커가 관리하는데, 워커는 자주 죽는다. 죽은 워커의 커서를 믿으면
+    내가 이미 답한 것을 또 보거나, 안 본 것을 봤다고 착각한다.
+    내 발신 시각은 내가 남긴 것이므로 워커 생사와 무관하다.
+    """
+    queue = os.path.join(SWARM, "messages", "queue.jsonl")
+    mine_last, incoming = "", []
+    try:
+        with open(queue, encoding="utf-8", errors="replace") as f:
+            for line in f:
+                line = line.strip()
+                if not line:
+                    continue
+                try:
+                    m = json.loads(line)
+                except Exception:
+                    continue
+                sender = str(m.get("sender", "")).lower()
+                ts = str(m.get("timestamp", ""))
+                if sender.startswith(ME.split("-")[0].lower()) and ME.lower() in sender:
+                    mine_last = max(mine_last, ts)
+                elif m.get("type") != "EVENT":
+                    incoming.append(m)
+    except FileNotFoundError:
+        return [], ""
+    fresh = [m for m in incoming if str(m.get("timestamp", "")) > mine_last]
+    return fresh[-6:], mine_last
+
+
 def cmd_brief():
-    """세션 시작 브리핑. 죽은 Monitor 대신 상태를 다시 채운다."""
+    """세션 시작 = c3p 자동 합류. 트리거 문구 없이 협업 상태를 주입한다.
+
+    사용자 지시(2026-09-07): "스킬 트리거 방식이 아닌, 시작하자마자 자동 실행되는 방식."
+    SessionStart 훅의 출력이 곧 에이전트의 컨텍스트가 되므로 이 훅이 그 자리다.
+    """
     _refresh_viewer()
     if not os.path.isdir(SWARM):
         _out({"suppressOutput": True})
-    rows = []
-    blocked = 0
-    for path in _swarm_files():
-        if not path.endswith(".md"):
-            continue
-        blocked += len(re.findall(r"\|\s*BLOCKED\s*\|", _read(path)))
-        rows.append("  - %-34s %s" % (os.path.basename(path), _last_seq(path)))
-    body = ("[CSC 스웜 상태]\n내 정체: %s\n동료 채널:\n%s\n"
-            "미해결 BLOCKED 표시: %d건\n"
-            "규약 제1조: 읽기 -> 사용자 보고 -> 작업 -> 자기 채널에 append."
-            % (ME, "\n".join(rows) or "  (없음)", blocked))
+
+    fresh, mine_last = _unread_for_me()
+    blocked = _unresolved_blocks()
+
+    lines = ["[c3p 자동 합류] 협의체 통신이 켜졌다. 별도 발동 문구는 필요 없다.",
+             "내 정체: %s" % ME, ""]
+
+    if fresh:
+        lines.append("내가 마지막으로 말한 뒤 들어온 메시지 %d건:" % len(fresh))
+        for m in fresh:
+            body = str(m.get("body", "")).replace("\n", " ")[:110]
+            lines.append("  · %s → %s | %s | %s"
+                         % (m.get("sender"), m.get("recipient"), m.get("type"), body))
+        lines.append("")
+        lines.append("→ 답할 것이 있으면 python csc.py send 로 보낸다.")
+        lines.append("  본문은 파일로 넘겨라. 셸이 백틱을 먹어 본문이 잘린 사고가 있었다.")
+    else:
+        # '없음' 과 '못 셌음' 을 구분한다. 조용한 것과 죽은 것은 다르다.
+        lines.append("새 메시지 없음 (내 마지막 발신 %s 이후)"
+                     % (mine_last[:19] or "기록 없음"))
+
+    if blocked:
+        lines.append("")
+        lines.append("🔴 미해결 진행막힘(BLOCKED) %d건 — 규약 2절 5항에 따라 "
+                     "산출물 확정 전에 해소해야 한다." % blocked)
+
+    lines += _clinic_note()
+
+    # 실시간 감시 안내.
+    #
+    # 훅은 감시를 직접 켤 수 없다 — 감시는 에이전트가 자기 도구로 시작해야 한다.
+    # 훅이 할 수 있는 것은 '켜야 한다는 사실을 잊지 않게 하는 것' 까지다.
+    # 켜는 행위는 자동이 아니다. 그걸 자동이라고 부르지 않는다.
+    #
+    # 왜 필요한가: 스케줄러 점호는 최대 4시간 간격이다. 그 사이에 동료가 답해도
+    # 4시간 뒤에야 안다. 감시를 켜 두면 몇 초 안에 안다.
+    # 대신 감시는 세션이 살아 있는 동안만 동작한다. 둘은 보완 관계다.
+    if os.path.exists(os.path.join(ROOT, "csc_watch.py")):
+        lines += [
+            "",
+            "📡 실시간 감시가 아직 켜져 있지 않다면 켜라 —",
+            "   Monitor 로 `python csc_watch.py --me %s --interval 3` 를 상시 실행한다." % ME,
+            "   동료가 답하면 몇 초 안에 알림이 온다. 켜지 않으면 최대 4시간 뒤 점호까지 모른다.",
+            "   (나에게 온 사람의 말만 알린다. 프로그램 기록과 내 발신은 걸러진다)",
+        ]
+
+    lines += [
+        "",
+        "규약 요지 — 어기면 질타(CALL_OUT) 대상이다:",
+        "  1조 읽기 → 사용자 보고 → 작업 → 자기 채널에 기록",
+        "  11-1 합의를 기록하려면 구성원별 발화 위치·시각·원문이 있어야 한다",
+        "  12-1 사용자 대면 출력은 한국어 우선, 전문용어는 쉬운 말과 반드시 병기",
+        "  13-1 부재는 동의도 거부도 아닌 기권(ABSTAIN)이다",
+        "  6조  commit·push 는 사용자 승인 없이 실행하지 않는다",
+    ]
+
     _out({"hookSpecificOutput": {"hookEventName": "SessionStart",
-                                 "additionalContext": body},
+                                 "additionalContext": "\n".join(lines)},
           "suppressOutput": True})
 
 
