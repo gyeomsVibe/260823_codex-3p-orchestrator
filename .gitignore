@@ -75,3 +75,5 @@ Thumbs.db
 # 스크래치 및 임시 파일
 scratch_*
 .codex-remote-attachments/
+.gemini/
+.vibe-clinic/
