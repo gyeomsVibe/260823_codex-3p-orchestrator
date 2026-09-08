@@ -63,3 +63,15 @@ Thumbs.db
 
 # 주장 감사 기록 (런타임 로그, 재생성 가능)
 .agent-swarm/messages/claim_audit.jsonl
+
+# 점호 흔적 로그 (런타임 기록, 재생성 가능)
+.agent-swarm/rollcall.log
+.vibe-clinic/config.json
+.vibe-clinic/treatment-ledger.json
+
+# 진단 실행 기록 (런타임, 재생성 가능)
+.agent-swarm/clinic_runs.jsonl
+
+# 스크래치 및 임시 파일
+scratch_*
+.codex-remote-attachments/

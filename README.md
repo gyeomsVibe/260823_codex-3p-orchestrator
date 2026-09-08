@@ -1,6 +1,9 @@
 # 🧬 Codex 3P Orchestrator (CSC v2.0)
 ### 3대 AI 도구(Codex, Claude Code, Antigravity) 단일 지능 유기체 병렬 협업 프레임워크
 
+> **공식 속칭:** **C3P 협의체(C3P Council, Codex·Claude Code·Antigravity가 함께 검토하고 실행하는 3도구 협업 체계)**
+> 프로젝트와 저장소의 정식 이름은 `codex-3p-orchestrator`이며, 운영 협의체를 말할 때 `C3P 협의체`를 사용합니다. 자세한 구분은 [C3P 협의체 공식 명칭과 바로 쓰는 방법](docs/35_C3P_COUNCIL_OFFICIAL_NAME_AND_USAGE_GUIDE.md)을 확인하세요.
+
 [![Tests](https://img.shields.io/badge/Unit_Tests-129_Passed-10b981?style=flat-square&logo=python)](tests/)
 [![Principle Sync](https://img.shields.io/badge/User--First-6%2F6_Synced-3b82f6?style=flat-square)](.agent-swarm/USER_FIRST_PRINCIPLE.md)
 [![Audit](https://img.shields.io/badge/Claim_Audit-9%2F9_Passed-8b5cf6?style=flat-square)](csc_audit.py)

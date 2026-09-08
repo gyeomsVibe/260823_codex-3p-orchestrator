@@ -129,6 +129,29 @@
 - 최종 검증: unittest 16/16 PASS, py_compile PASS, diff check PASS.
 - commit·push는 수행하지 않았다.
 
+## 2026-09-07 — TASK 무응답 오판 진단과 DLQ 빠른 실패
+
+### 관찰과 원인
+
+- `doctor`의 `READY`는 로컬 소켓·ROSTER·하트비트만 증명하며 실제 AI 응답은 증명하지 않는다.
+- 응답이 없다고 보였던 두 TASK는 워커 cursor에서 처리 완료였고, 실제 실패 원문은 `.agent-swarm/dead-letter/`에 있었다.
+- Claude Code는 `Reached max turns (6)`, Antigravity는 헤드리스 권한 질문 불가로 각각 3회 실패했다.
+- `csc.py await`가 `queue.jsonl`의 `RESULT`·`BLOCKED`만 읽고 DLQ를 보지 않아 이미 끝난 실패를 120초 타임아웃으로 잘못 표시했다.
+
+### 3자 합의와 최소 수정
+
+- Codex·Claude Code·Antigravity가 모두 “브로커 attic 이동을 보류하고 DLQ 실패 가시화부터 고친다”에 찬성했다.
+- 비인증 로컬 모드의 `wait_for_replies()`가 예상 도구의 해당 TASK `DEAD_LETTER`를 발견하면 `TaskExecutionFailed`로 즉시 종료하도록 수정했다.
+- 인증 모드는 현재 DLQ가 서명되지 않았으므로 이를 신뢰하지 않고 기존 동작을 유지한다.
+
+### 검증
+
+- 이전 Claude 실패 TASK: `--timeout 120`에서도 0.63초 만에 실제 `Reached max turns (6)` 원문과 종료 코드 1을 반환했다.
+- 새 무도구 TASK: Claude Code와 Antigravity 모두 실제 `RESULT` 왕복 성공.
+- 전용 테스트 8개 통과, 전체 unittest 총 149개 중 148개 통과·1개 의도적 건너뜀, `csc_sync.py` 6개 파일 × 8개 계약 일치.
+- 최종 재표결: 3/3 `YES`. 남은 위험은 인증 모드의 기존 타임아웃과 서명되지 않은 DLQ다.
+- commit·push는 수행하지 않았다. 다른 세션의 미커밋 변경과 섞지 않기 위해 현재 작업 단위를 별도로 보존했다.
+
 다음 게이트: broker ROSTER, 멱등 `activate`, 두 stub worker process를 묶은 오프라인 E2E. 실제 CLI 호출과 로그인 자동화는 그 다음 별도 게이트다.
 
 ## 2026-09-04 — 실시간 3P 런타임과 비상 정족수 실증

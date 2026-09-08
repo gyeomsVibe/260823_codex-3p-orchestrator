@@ -30,9 +30,13 @@
 24. `22_ANTIGRAVITY_BACKGROUND_CLI_VALUE_ASSESSMENT.md` — Antigravity를 Bridge 대신 백그라운드 CLI로 운용하는 세 대안과 조건부 Go 판정
 25. `23_C3P_PER_PROJECT_DASHBOARD_VALUE_AND_PLAN.md` — C3P 발동 시 프로젝트별 감시판을 만드는 가치평가, 최소 구현, 확장 계획
 26. `24_CSC_LOCAL_SOCKET_BROKER_RESEARCH_AND_IMPLEMENTATION_PLAN.md` — CSC 소켓 브로커의 실제 상태, 공개 구현 비교, 위협 모델, 단계별 보강·반증 계획
-27. `user/01_learning_guide/` — [01 가이드 팩] 모르는 걸 모르는 사용자를 위한 학습-인지 가이드 (HTML, PDF, 6개 챕터 마크다운)
-28. `user/02_advisor_package/` — [02 자문 팩] 지도교수님께 아키텍처 실증 결과와 4대 난제를 보고하는 지도편달 패키지 (HTML, PDF, 5개 섹션 마크다운)
-29. `user/README.md` — 사용자 및 지도교수 문서 팩 마스터 인덱스
+27. `25_C3P_V2_ZERO_BASE_REDESIGN.md` — C3P v2 제로베이스 재설계: 소켓 브로커 재검토, 파일 우편함 모델, 스케줄러 기반 비동기 협업 계획
+28. `26_REALTIME_AND_AUTO_CLINIC_DESIGN.md` — 실시간 파일 변화 감시(csc_watch) 및 자동 자가진단(csc_clinic) 배선 설계
+29. `user/01_learning_guide/` — [01 가이드 팩] 모르는 걸 모르는 사용자를 위한 학습-인지 가이드 (HTML, PDF, 6개 챕터 마크다운)
+30. `user/02_advisor_package/` — [02 자문 팩] 지도교수님께 아키텍처 실증 결과와 4대 난제를 보고하는 지도편달 패키지 (HTML, PDF, 5개 섹션 마크다운)
+31. `user/README.md` — 사용자 및 지도교수 문서 팩 마스터 인덱스
+32. `27_C3P_AUTHENTICATED_FAILURE_AND_HEADLESS_CLI_RESEARCH.md` — 인증된 실패 통보, Claude 턴 제한, Antigravity 헤드리스 권한 문제의 공개자료 연구와 단계별 해결안
+33. `28_ANTIGRAVITY_CAPACITY_ROUTING_RESEARCH_AND_DESIGN.md` — Antigravity에 긴 열람·반복을 맡기고 Codex·Claude 희소 토큰을 판단·압축 감시에 집중하는 예산절약형 C3P 근거·역할·파일럿 설계
 
 ## 운영 규칙
 
