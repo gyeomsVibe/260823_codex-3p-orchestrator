@@ -41,13 +41,20 @@ class FakeProcess:
 class TestBoundedCliExecutor(unittest.TestCase):
     def test_claude_command_is_noninteractive_and_has_no_edit_tools(self):
         popen = Mock(return_value=FakeProcess(stdout="review ok"))
-        executor = BoundedCliExecutor("claude", PROJECT_ROOT, popen_factory=popen)
+        rules = PROJECT_ROOT / "CLAUDE.md"
+        executor = BoundedCliExecutor(
+            "claude", PROJECT_ROOT, popen_factory=popen, claude_rules_path=rules,
+        )
         self.assertEqual(executor({"message_id": "T1", "body": "review"}), "review ok")
         command = popen.call_args.args[0]
         self.assertIn("--permission-mode", command)
         self.assertIn("plan", command)
         self.assertIn("--restricted", command)
         self.assertNotIn("--dangerously-skip-permissions", command)
+        self.assertEqual(
+            command[command.index("--append-system-prompt-file") + 1],
+            str(rules.resolve()),
+        )
 
         # 계약 변경 (2026-09-05): --tools "" -> --allowed-tools "Read,Grep,Glob"
         #
@@ -81,7 +88,10 @@ class TestBoundedCliExecutor(unittest.TestCase):
             stdout="",
             stderr="You've hit your session limit - resets 4:20am",
         ))
-        executor = BoundedCliExecutor("claude", PROJECT_ROOT, popen_factory=popen)
+        executor = BoundedCliExecutor(
+            "claude", PROJECT_ROOT, popen_factory=popen,
+            claude_rules_path=PROJECT_ROOT / "CLAUDE.md",
+        )
         with self.assertRaises(AgentUnavailable) as caught:
             executor({"message_id": "T1", "body": "review"})
         self.assertEqual(caught.exception.availability_code, "quota_exhausted")
@@ -151,6 +161,19 @@ class TestBoundedCliExecutor(unittest.TestCase):
         with self.assertRaises(AgentUnavailable) as caught:
             executor({"message_id": "T5", "body": "inspect"})
         self.assertEqual(caught.exception.availability_code, "quota_exhausted")
+
+    def test_claude_refuses_to_run_without_global_rules(self):
+        popen = Mock()
+        with tempfile.TemporaryDirectory() as temp_dir:
+            missing = Path(temp_dir) / "CLAUDE.md"
+            executor = BoundedCliExecutor(
+                "claude", PROJECT_ROOT, popen_factory=popen,
+                claude_rules_path=missing,
+            )
+            with self.assertRaises(AgentUnavailable) as caught:
+                executor({"message_id": "T1", "body": "review"})
+        self.assertEqual(caught.exception.availability_code, "rules_unavailable")
+        popen.assert_not_called()
 
     def test_antigravity_denied_action_is_not_accepted_as_success(self):
         raw = (

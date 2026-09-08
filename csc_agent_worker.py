@@ -85,6 +85,7 @@ class BoundedCliExecutor:
         popen_factory: Callable[..., subprocess.Popen] = subprocess.Popen,
         process_tree_terminator: Callable[[subprocess.Popen], None] = terminate_process_tree,
         telemetry_recorder: Callable[[Dict[str, Any], Path], Path] = record_telemetry_event,
+        claude_rules_path: Optional[os.PathLike[str] | str] = None,
     ) -> None:
         normalized = agent.strip().lower()
         if normalized not in SUPPORTED_AGENTS:
@@ -96,6 +97,12 @@ class BoundedCliExecutor:
         self.process_tree_terminator = process_tree_terminator
         self.telemetry_recorder = telemetry_recorder
         self.telemetry_path = self.project_root / ".agent-swarm" / "telemetry" / "antigravity.jsonl"
+        claude_config_dir = Path(
+            os.environ.get("CLAUDE_CONFIG_DIR", Path.home() / ".claude")
+        ).expanduser()
+        self.claude_rules_path = Path(
+            claude_rules_path or claude_config_dir / "CLAUDE.md"
+        ).resolve()
 
     def command_for(self, prompt: str) -> list[str]:
         if self.agent == "claude":
@@ -113,6 +120,7 @@ class BoundedCliExecutor:
                 "claude", "--safe-mode", "--restricted",
                 "--permission-mode", "plan",
                 "--permission-prompts", "none",
+                "--append-system-prompt-file", str(self.claude_rules_path),
                 "--tools", "Read,Grep,Glob",
                 "--allowed-tools", "Read,Grep,Glob",
                 "--output-format", "text", "--max-turns", "30", "-p", prompt,
@@ -129,6 +137,11 @@ class BoundedCliExecutor:
         prompt = str(message.get("body", "")).strip()
         if not prompt:
             raise ValueError("TASK body must not be empty")
+        if self.agent == "claude" and not self.claude_rules_path.is_file():
+            raise AgentUnavailable(
+                "rules_unavailable",
+                f"Claude global rules file is missing: {self.claude_rules_path}",
+            )
         command = self.command_for(prompt)
         creationflags = subprocess.CREATE_NEW_PROCESS_GROUP if sys.platform == "win32" else 0
         try:

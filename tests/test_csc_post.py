@@ -147,7 +147,8 @@ class IndependenceTests(unittest.TestCase):
         # 프로젝트 모듈을 하나라도 import 하면, 그 모듈이 깨졌을 때 같이 죽는다.
         # 그러면 비상구가 아니다. 이 시험이 그 규칙을 지킨다.
         import ast
-        src = open(csc_post.__file__, encoding="utf-8").read()
+        with open(csc_post.__file__, encoding="utf-8") as f:
+            src = f.read()
         imported = set()
         for node in ast.walk(ast.parse(src)):
             if isinstance(node, ast.Import):

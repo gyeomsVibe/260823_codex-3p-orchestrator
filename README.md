@@ -4,7 +4,7 @@
 > **공식 속칭:** **C3P 협의체(C3P Council, Codex·Claude Code·Antigravity가 함께 검토하고 실행하는 3도구 협업 체계)**
 > 프로젝트와 저장소의 정식 이름은 `codex-3p-orchestrator`이며, 운영 협의체를 말할 때 `C3P 협의체`를 사용합니다. 자세한 구분은 [C3P 협의체 공식 명칭과 바로 쓰는 방법](docs/35_C3P_COUNCIL_OFFICIAL_NAME_AND_USAGE_GUIDE.md)을 확인하세요.
 
-[![Tests](https://img.shields.io/badge/Unit_Tests-129_Passed-10b981?style=flat-square&logo=python)](tests/)
+[![Tests](https://img.shields.io/badge/Unit_Tests-233_Passed-10b981?style=flat-square&logo=python)](tests/)
 [![Principle Sync](https://img.shields.io/badge/User--First-6%2F6_Synced-3b82f6?style=flat-square)](.agent-swarm/USER_FIRST_PRINCIPLE.md)
 [![Audit](https://img.shields.io/badge/Claim_Audit-9%2F9_Passed-8b5cf6?style=flat-square)](csc_audit.py)
 [![Decide](https://img.shields.io/badge/Decide_Engine-12%2F12_Passed-f59e0b?style=flat-square)](csc_decide.py)
@@ -128,7 +128,7 @@ graph TD
 | 항목 | 기존 구상 (피벗 전 맹점) | 피벗 후 실증 아키텍처 (현 구현) | 검증 증거 |
 |---|---|---|:---:|
 | **상태 저장소** | AI 모델 컨텍스트에 의존 (휘발성) | **SQLite 기반 단일 진실 공급원 (SSOT)** | `csc_slice.py` (9/9 통과) |
-| **도구 수명주기** | 데몬 상주형 무한 대기 (비용/좀비 위험) | **필요 시 호출 후 종료되는 단발성(Ephemeral) CLI** | 단위 테스트 129건 통과 |
+| **도구 수명주기** | 데몬 상주형 무한 대기 (비용/좀비 위험) | **필요 시 호출 후 종료되는 단발성(Ephemeral) CLI** | 단위 테스트 233건 통과 |
 | **통신 프로토콜** | 무거운 외부 프레임워크 | **로컬 파일 큐 + 경량 Socket Broker** | `csc_broker.py` & `csc_worker.py` |
 | **결함 방어** | AI의 자가 보고 신뢰 (할루시네이션) | **발신 전 실측 주장 감사기 (`csc_audit.py`)** | `csc_audit.py` (9/9 통과) |
 | **교착 해결** | 무한 재시도 및 블로킹 | **5분 TTL Step-Touch 락 + 정족수 엔진** | `csc_decide.py` (12/12 통과) |
@@ -188,7 +188,7 @@ python csc.py status
 # 3. 실시간 주장 감사기 자체 검증
 python csc_audit.py --selftest
 
-# 4. 전체 단위 테스트 129종 일괄 검증
+# 4. 전체 단위 테스트 일괄 검증 (233건 통과, 1건 건너뜀)
 python -m unittest discover -s tests -q
 ```
 
@@ -245,7 +245,7 @@ python -m unittest discover -s tests -q
 │   │   └── 02_advisor_package/                        # 지도교수 지도편달 패키지 (HTML/PDF/MD)
 │   └── 24_CSC_LOCAL_SOCKET_BROKER_RESEARCH_AND_IMPLEMENTATION_PLAN.md # 소켓 브로커 연구 계획
 │
-├── tests/                                             # [검증] 단위 및 통합 테스트 (129건 PASS)
+├── tests/                                             # [검증] 단위 및 통합 테스트 (233건 통과, 1건 건너뜀)
 │   ├── test_csc_broker_protocol.py
 │   ├── test_csc_worker.py
 │   └── test_user_first_dashboard.py
