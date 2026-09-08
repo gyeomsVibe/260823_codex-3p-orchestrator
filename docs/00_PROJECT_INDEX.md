@@ -53,6 +53,8 @@
 47. `46_C3P_COORDINATOR_AND_BUDGET_OS_WALKTHROUGH.md` — C3P 협의체 통합 작업 조율기 및 예산 절감 운영체제 커밋·푸시 완료 결과 보고서
 48. `47_C3P_COUNCIL_README_SYNC_IMPLEMENTATION_PLAN.md` — MIA 전략절차 기반 C3P 협의체 정본 명칭 리드미 동기화 실행 계획서
 49. `48_C3P_COUNCIL_README_SYNC_WALKTHROUGH.md` — C3P 협의체 공식 명칭 및 리드미·산출물 전수 동기화 완결 결과 보고서
+50. `49_C3P_BUDGET_SAVING_MODE_AND_GIT_COORDINATION_RESEARCH.md` — C3P 협의체(C3P Council) 비대칭 쿼터 예산절약 모드 및 고효율 Git 동시성 조율 심층 연구 보고서
+51. `50_C3P_BUDGET_SAVING_MODE_README_INTEGRATION_WALKTHROUGH.md` — C3P 협의체 비대칭 쿼터 예산절약 모드 리드미 반영 및 269개 테스트 통과 완결 결과 보고서
 
 ## 운영 규칙
 

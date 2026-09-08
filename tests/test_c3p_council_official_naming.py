@@ -34,11 +34,21 @@ class C3PCouncilOfficialNamingTests(unittest.TestCase):
         self.assertIn(OFFICIAL_TERM, readme)
         self.assertIn("codex-3p-orchestrator", readme)
         self.assertIn(FIRST_MENTION, readme)
-        self.assertIn("Unit_Tests-268_Passed", readme)
+        self.assertIn("Unit_Tests-269_Passed", readme)
         self.assertIn("csc_work_item.py", readme)
         self.assertIn("c3p_local_llm.py", readme)
         self.assertNotIn("Unit_Tests-237_Passed", readme)
         self.assertNotIn("Unit_Tests-267_Passed", readme)
+        self.assertNotIn("Unit_Tests-268_Passed", readme)
+
+    def test_readme_includes_budget_saving_os_section(self) -> None:
+        readme = (ROOT / "README.md").read_text(encoding="utf-8")
+        self.assertIn("C3P 비대칭 쿼터 예산절약 모드", readme)
+        self.assertIn("docs/49_C3P_BUDGET_SAVING_MODE_AND_GIT_COORDINATION_RESEARCH.md", readme)
+        self.assertIn("docs/38_C3P_DELEGATED_REPORTING_AND_SPOKESPERSON_ARCHITECTURE.md", readme)
+        self.assertIn("docs/39_C3P_OLLAMA_ZERO_TOKEN_HARNESS_INTEGRATED_SPEC.md", readme)
+        self.assertIn("docs/42_C3P_RCS_BENCHMARK_RESULTS.md", readme)
+        self.assertIn("docs/44_C3P_AUTOMATIC_WORK_COORDINATION_IMPLEMENTATION_AND_EVIDENCE.md", readme)
 
 
 if __name__ == "__main__":

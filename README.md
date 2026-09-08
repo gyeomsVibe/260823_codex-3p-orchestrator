@@ -6,7 +6,7 @@
 > **‘단일 지능 유기체’**는 세 도구의 유기적 분업 역할을 설명하는 공학적 비유이고, 실제 검토와 합의를 수행하는 운영 주체의 정식 속칭은 **`C3P 협의체`**입니다.  
 > 자세한 구분은 [docs/35 C3P 협의체 공식 명칭과 바로 쓰는 방법](docs/35_C3P_COUNCIL_OFFICIAL_NAME_AND_USAGE_GUIDE.md)을 확인하세요.
 
-[![Tests](https://img.shields.io/badge/Unit_Tests-268_Passed-10b981?style=flat-square&logo=python)](tests/)
+[![Tests](https://img.shields.io/badge/Unit_Tests-269_Passed-10b981?style=flat-square&logo=python)](tests/)
 [![Principle Sync](https://img.shields.io/badge/User--First-6%2F6_Synced-3b82f6?style=flat-square)](.agent-swarm/USER_FIRST_PRINCIPLE.md)
 [![C3P Council](https://img.shields.io/badge/C3P_Council-Active-7c3aed?style=flat-square)](docs/35_C3P_COUNCIL_OFFICIAL_NAME_AND_USAGE_GUIDE.md)
 [![Coordinator](https://img.shields.io/badge/Work_Item-SQLite_Fenced-059669?style=flat-square)](csc_work_item.py)
@@ -24,12 +24,13 @@
 1. [🌟 2대 독립 패키지 (핵심 산출물 바로가기)](#-2대-독립-패키지-핵심-산출물-바로가기)
 2. [💡 10초 만에 이해하는 우편실 비유](#-10초-만에-이해하는-우편실-비유)
 3. [🧬 유기체 3대 기관 모델 (Living Organ Model)](#-유기체-3대-기관-모델-living-organ-model)
-4. [🎓 지도교수 피벗 조언 수용 및 실증치](#-지도교수-피벗-조언-수용-및-실증치)
-5. [⚖️ C3P 협의체 5대 거버넌스 헌법](#️-c3p-협의체-5대-거버넌스-헌법)
-6. [🛡️ 사용자 안심 원칙 (User-First Principle)](#️-사용자-안심-원칙-user-first-principle)
-7. [🚀 빠른 시작 & 실전 치트키 조작법](#-빠른-시작--실전-치트키-조작법)
-8. [📁 저장소 구조 맵 (Repository Structure)](#-저장소-구조-맵-repository-structure)
-9. [👥 기여 및 저작권 (Contributors & License)](#-기여-및-저작권-contributors--license)
+4. [🏛️ C3P 비대칭 쿼터 예산절약 모드 (Budget-Saving OS)](#️-c3p-비대칭-쿼터-예산절약-모드-asymmetric-quota-budget-saving-os)
+5. [🎓 지도교수 피벗 조언 수용 및 실증치](#-지도교수-피벗-조언-수용-및-실증치)
+6. [⚖️ C3P 협의체 5대 거버넌스 헌법](#️-c3p-협의체-5대-거버넌스-헌법)
+7. [🛡️ 사용자 안심 원칙 (User-First Principle)](#️-사용자-안심-원칙-user-first-principle)
+8. [🚀 빠른 시작 & 실전 치트키 조작법](#-빠른-시작--실전-치트키-조작법)
+9. [📁 저장소 구조 맵 (Repository Structure)](#-저장소-구조-맵-repository-structure)
+10. [👥 기여 및 저작권 (Contributors & License)](#-기여-및-저작권-contributors--license)
 
 ---
 
@@ -122,6 +123,59 @@ graph TD
     style Catalyst fill:#7c3aed,stroke:#5b21b6,color:#fff
     style User fill:#dc2626,stroke:#991b1b,color:#fff
 ```
+
+---
+
+## 🏛️ C3P 비대칭 쿼터 예산절약 모드 (Asymmetric Quota Budget-Saving OS)
+
+> **"사령관의 1% 희소 토큰은 아끼고, 감각기의 무제한 탐색과 로컬 0원 모델을 결합하여 클라우드 비용 80%를 절감합니다."**  
+> C3P 협의체는 단순히 3개 AI가 대화만 나누는 구조가 아닙니다. 도구마다 서로 다른 사용량 한계(**비대칭 쿼터(asymmetric quota, 인공지능 도구마다 서로 다르게 남아 있는 사용량 한도)**)를 정밀하게 고려하여 설계된 **지능형 비용 최적화 운영체제**입니다. (상세 연구: [docs/49](docs/49_C3P_BUDGET_SAVING_MODE_AND_GIT_COORDINATION_RESEARCH.md))
+
+```mermaid
+graph TD
+    User["👤 사용자 (지시 및 최종 승인)"]
+    
+    subgraph C3P_OS [C3P 비대칭 쿼터 예산절약 OS]
+        direction TB
+        Codex["🧠 사령관: <b>Codex</b> (잔여 쿼터 3% 긴급 보존)<br>• 방향 승인 및 최고 의사결정만 단발 수행"]
+        Antigravity["👁️ 상임 대변인 & 실측: <b>Antigravity</b> (무제한 탐색)<br>• 사용자 브리핑, 웹 딥리서치, UI 검증 전담"]
+        Claude["🛡️ 핵심 면역계: <b>Claude Code</b> (안정적 쿼터)<br>• 핵심 알고리즘, 테스트 코드, 결함 자가 치유"]
+        Ollama["💻 로컬 0원 계산소: <b>Ollama qwen2.5-coder:3b</b><br>• 로그 파싱, 정규식 추출, 단순 포맷팅 0원 오프로딩"]
+        
+        Coordinator["⚖️ SQLite 작업 조율기 (Fencing Token)<br>• 파일 쓰기 및 Git 커밋 단일 순번 통제"]
+    end
+
+    User <==>|1회 원스톱 승인| Codex
+    Codex -.->|브리핑 전권 위임| Antigravity
+    Antigravity <==>|상세 대면 보고| User
+    
+    Antigravity & Claude -->|단순 작업 0원 위임| Ollama
+    Antigravity & Claude & Codex -->|작업권한 획득| Coordinator
+    
+    style Codex fill:#2563eb,stroke:#1e40af,color:#fff
+    style Antigravity fill:#d97706,stroke:#b45309,color:#fff
+    style Claude fill:#059669,stroke:#047857,color:#fff
+    style Ollama fill:#4b5563,stroke:#374151,color:#fff
+    style Coordinator fill:#7c3aed,stroke:#5b21b6,color:#fff
+```
+
+### 💡 4대 핵심 비용 절감 엔진
+1. **상임 대변인 위임 브리핑 ([docs/38](docs/38_C3P_DELEGATED_REPORTING_AND_SPOKESPERSON_ARCHITECTURE.md))**:
+   - 사령관 Codex의 잔여 쿼터(3%)를 소진하지 않도록, 긴 분량의 보고와 사용자 소통은 Antigravity가 **상임 대변인(spokesperson, 사령관을 대신하여 사용자에게 길고 자세한 내용을 전문적으로 브리핑해 주는 공식 발표자)**으로서 전담합니다.
+2. **로컬 0원 Ollama 하네스 ([docs/39](docs/39_C3P_OLLAMA_ZERO_TOKEN_HARNESS_INTEGRATED_SPEC.md), [docs/36](docs/36_OLLAMA_LOCAL_TOOL_SPEC.md))**:
+   - 단순 텍스트 변환, 정규식 추출, 에러 로그 1차 파싱은 로컬 **소형언어모델(SLM: Small Language Model, 컴퓨터 자원을 적게 쓰면서 로컬에서 빠르게 실행되는 작은 인공지능 모델)**에 **0원 오프로딩(offloading, 작업을 다른 가벼운 도구에 덜어내는 기술)**하여 **외부 클라우드 토큰 소모 0원**을 달성합니다.
+3. **15초 단 1회 승격 가드레일 (Fail-Fast & Escalate-Once)**:
+   - 로컬 모델이 15초를 초과하거나 실패하면 지체 없이 상위 도구가 직접 해결하여 시간과 토큰 낭비를 원천 차단합니다.
+4. **SQLite 펜싱 토큰 단일 쓰기 조율기 ([docs/44](docs/44_C3P_AUTOMATIC_WORK_COORDINATION_IMPLEMENTATION_AND_EVIDENCE.md))**:
+   - 여러 에이전트가 동시에 파일을 덮어쓰거나 Git 충돌을 일으키지 않도록 **펜싱 토큰(fencing token, 순번을 매겨 통제하는 고유 번호표)**을 발급하여 단일 쓰기자만 커밋하도록 통제하여 정합성을 100% 보장합니다.
+
+### 📊 R-C-S 3대 과제 0원 오프로딩 실측 성과 ([docs/42](docs/42_C3P_RCS_BENCHMARK_RESULTS.md))
+
+| 태스크 유형 | 실측 처리 내용 | 로컬 소요 시간 | 외부 클라우드 토큰 소모 | 실측 판정 |
+|---|---|:---:|:---:|:---:|
+| **R (Research)** | 장문 프로젝트 문서 3줄 요약 | **8.5초** | **0원 (0 Token)** | ✅ 검증 완료 |
+| **C (Code)** | 복잡한 에러 패턴 정규식(Regex) 추출 | **1.6초** | **0원 (0 Token)** | ✅ 검증 완료 |
+| **S (Security)** | 보안 로그 1차 진단 및 스키마 검증 | **0.3초** | **0원 (0 Token)** | ✅ 검증 완료 |
 
 ---
 
