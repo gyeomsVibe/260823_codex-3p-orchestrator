@@ -71,9 +71,13 @@ Thumbs.db
 
 # 진단 실행 기록 (런타임, 재생성 가능)
 .agent-swarm/clinic_runs.jsonl
+.agent-swarm/clinic_reports/
 
 # 스크래치 및 임시 파일
 scratch_*
 .codex-remote-attachments/
 .gemini/
-.vibe-clinic/
+.vibe-clinic/*
+!.vibe-clinic/diagnostics/
+!.vibe-clinic/diagnostics/*.js
+!.vibe-clinic/diagnostics/README.md

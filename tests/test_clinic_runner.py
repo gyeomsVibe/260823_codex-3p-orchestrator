@@ -14,8 +14,11 @@ from __future__ import annotations
 
 import json
 import os
+import subprocess
 import sys
+import tempfile
 import unittest
+from datetime import datetime, timezone
 from unittest import mock
 
 PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -87,6 +90,14 @@ class TestRealDiagnosticsExist(unittest.TestCase):
                 measures = bool(re.search(r"run\(|readFileSync|existsSync", src))
                 self.assertTrue(measures, f"{name} 이 아무것도 측정하지 않는다")
 
+    def test_regression_diagnostic_uses_repository_test_runner(self):
+        path = os.path.join(PROJECT_ROOT, ".vibe-clinic", "diagnostics",
+                            "01_regression.clinic.js")
+        with open(path, encoding="utf-8") as handle:
+            source = handle.read()
+        self.assertIn("python -m unittest discover -s tests -q", source)
+        self.assertNotIn("python -m pytest", source)
+
 
 class TestResultsAlwaysDeclareLimits(unittest.TestCase):
     """통과를 참으로 읽히게 두지 않는다."""
@@ -103,6 +114,57 @@ class TestResultsAlwaysDeclareLimits(unittest.TestCase):
                                   "status": "ERROR", "reason": "진단 항목이 없습니다",
                                   "results": []})
         self.assertIn("진단 항목이 없습니다", text)
+
+
+class TestMilestoneReports(unittest.TestCase):
+    def test_slug_cannot_escape_report_directory(self):
+        slug = csc_clinic.milestone_slug("../../릴리스 후보")
+        self.assertEqual(slug, "릴리스_후보")
+        self.assertNotIn("/", slug)
+        self.assertNotIn("\\", slug)
+        with self.assertRaises(ValueError):
+            csc_clinic.milestone_slug("   ")
+
+    def test_git_head_failure_is_visible_instead_of_crashing(self):
+        failure = subprocess.TimeoutExpired("git", 5)
+        with mock.patch.object(csc_clinic.subprocess, "run", side_effect=failure):
+            head, detail = csc_clinic.current_git_head()
+        self.assertEqual(head, "UNKNOWN")
+        self.assertIn("TimeoutExpired", detail)
+
+    def test_report_records_label_head_and_result_without_overwrite(self):
+        out = {"at": "x", "phase": "수정", "total": 1, "ok": 1,
+               "warning": 0, "error": 0, "status": "OK",
+               "health_percent": 100, "results": []}
+        instant = datetime(2026, 9, 8, 10, 0, 0, 123456, tzinfo=timezone.utc)
+        with tempfile.TemporaryDirectory() as temp_dir, \
+             mock.patch.object(csc_clinic, "REPORT_DIR", temp_dir), \
+             mock.patch.object(csc_clinic, "current_git_head",
+                               return_value=("a" * 40, "")):
+            path = csc_clinic.write_milestone_report("../../release", out, instant)
+            with open(path, encoding="utf-8") as handle:
+                text = handle.read()
+            self.assertEqual(os.path.dirname(path), temp_dir)
+            self.assertIn('"../../release"', text)
+            self.assertIn("`" + "a" * 40 + "`", text)
+            self.assertIn('"status": "OK"', text)
+            with self.assertRaises(FileExistsError):
+                csc_clinic.write_milestone_report("../../release", out, instant)
+
+    def test_explicit_milestone_runs_during_build_phase_and_preserves_warning(self):
+        warning = {"status": "WARNING", "phase": "구현", "total": 1,
+                   "ok": 0, "warning": 1, "error": 0,
+                   "health_percent": 0, "results": []}
+        with mock.patch.object(sys, "argv", ["csc_clinic.py", "--milestone", "m1"]), \
+             mock.patch.object(csc_clinic, "build_phase", return_value=True), \
+             mock.patch.object(csc_clinic, "run_all", return_value=warning) as run_all, \
+             mock.patch.object(csc_clinic, "render", return_value="WARNING"), \
+             mock.patch.object(csc_clinic, "write_milestone_report",
+                               return_value="draft.md") as write_report, \
+             mock.patch("builtins.print"):
+            self.assertEqual(csc_clinic.main(), 1)
+        run_all.assert_called_once_with()
+        write_report.assert_called_once_with("m1", warning)
 
 
 if __name__ == "__main__":

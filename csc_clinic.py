@@ -27,6 +27,7 @@ from __future__ import annotations
 import argparse
 import json
 import os
+import re
 import subprocess
 import sys
 from datetime import datetime
@@ -36,6 +37,7 @@ SWARM = os.path.join(HERE, ".agent-swarm")
 PHASE_FILE = os.path.join(SWARM, "BUILD_PHASE")
 DIAG_DIR = os.path.join(HERE, ".vibe-clinic", "diagnostics")
 RUN_LOG = os.path.join(SWARM, "clinic_runs.jsonl")
+REPORT_DIR = os.path.join(SWARM, "clinic_reports")
 
 if sys.platform == "win32":
     try:
@@ -173,19 +175,85 @@ def render(out: dict) -> str:
     return "\n".join(lines)
 
 
+def milestone_slug(value: str) -> str:
+    """Turn a user label into one bounded filename component."""
+    original = value.strip()
+    if not original:
+        raise ValueError("마일스톤 이름은 비워 둘 수 없습니다")
+    slug = re.sub(r"[^\w-]+", "_", original, flags=re.UNICODE).strip("_-")[:80]
+    if not slug:
+        raise ValueError("마일스톤 이름에는 문자나 숫자가 하나 이상 필요합니다")
+    return slug
+
+
+def current_git_head() -> tuple[str, str]:
+    """Return the current commit and a visible diagnostic when Git is unavailable."""
+    try:
+        proc = subprocess.run(
+            ["git", "rev-parse", "HEAD"], cwd=HERE, capture_output=True,
+            text=True, encoding="utf-8", errors="replace", timeout=5,
+        )
+    except (OSError, subprocess.SubprocessError) as exc:
+        return "UNKNOWN", f"{type(exc).__name__}: {exc}"
+    head = (proc.stdout or "").strip()
+    if proc.returncode != 0 or not re.fullmatch(r"[0-9a-fA-F]{40,64}", head):
+        detail = (proc.stderr or proc.stdout or "유효한 커밋 해시가 없습니다").strip()
+        return "UNKNOWN", detail[:300]
+    return head, ""
+
+
+def write_milestone_report(
+    milestone: str,
+    out: dict,
+    now: datetime | None = None,
+) -> str:
+    """Write one collision-safe runtime draft and return its absolute path."""
+    slug = milestone_slug(milestone)
+    observed = now or datetime.now().astimezone()
+    stamp = observed.strftime("%Y%m%dT%H%M%S%f%z")
+    head, head_error = current_git_head()
+    os.makedirs(REPORT_DIR, exist_ok=True)
+    path = os.path.join(REPORT_DIR, f"{slug}-{stamp}.md")
+    payload = json.dumps(out, ensure_ascii=False, indent=2)
+    lines = [
+        "# 마일스톤 자가진단 초안 보고서",
+        "",
+        f"- 마일스톤 원문: {json.dumps(milestone.strip(), ensure_ascii=False)}",
+        f"- 보고서 생성 시각: `{observed.isoformat()}`",
+        f"- Git HEAD: `{head}`",
+        f"- 진단 상태: `{out.get('status', 'UNKNOWN')}`",
+    ]
+    if head_error:
+        lines.append(f"- Git HEAD 조회 오류: {json.dumps(head_error, ensure_ascii=False)}")
+    lines.extend(["", "## 기계 진단 결과(JSON)", ""])
+    lines.extend(f"    {line}" for line in payload.splitlines())
+    lines.append("")
+    with open(path, "x", encoding="utf-8") as handle:
+        handle.write("\n".join(lines))
+    return path
+
+
 def main() -> int:
     ap = argparse.ArgumentParser(description="진단을 돌린다. 고치는 단계에서 자동 발동한다")
     ap.add_argument("--force", action="store_true",
                     help="만드는 단계여도 강제로 돌린다")
     ap.add_argument("--check-phase", action="store_true",
                     help="단계만 확인하고 끝낸다 (훅이 쓴다)")
+    ap.add_argument("--milestone",
+                    help="명시한 마일스톤을 진단하고 런타임 초안 보고서를 남긴다")
     args = ap.parse_args()
 
     if args.check_phase:
         print("구현" if build_phase() else "수정")
         return 0
 
-    if build_phase() and not args.force:
+    if args.milestone is not None:
+        try:
+            milestone_slug(args.milestone)
+        except ValueError as exc:
+            ap.error(str(exc))
+
+    if build_phase() and not args.force and args.milestone is None:
         print("지금은 '먼저 만드는 단계' 입니다. 진단을 돌리지 않습니다.")
         print("고칠 준비가 되면 .agent-swarm/BUILD_PHASE 파일을 지우세요.")
         print("지금 바로 보고 싶으면 --force 를 붙이세요.")
@@ -193,6 +261,13 @@ def main() -> int:
 
     out = run_all()
     print(render(out))
+    if args.milestone is not None:
+        try:
+            report_path = write_milestone_report(args.milestone, out)
+        except (OSError, ValueError) as exc:
+            print(f"🔴 마일스톤 초안 보고서를 쓰지 못했습니다: {exc}", file=sys.stderr)
+            return 2
+        print(f"\n초안 보고서: {report_path}")
     return 0 if out["status"] == "OK" else (1 if out["status"] == "WARNING" else 2)
 
 
