@@ -740,6 +740,13 @@ def activate_project(project_root: Path, timeout: float) -> dict:
 
 
 def main():
+    # Delegate before the outer parser sees work-specific flags such as --db.
+    # This keeps the work coordinator's CLI independently testable and avoids
+    # duplicating its argument schema here.
+    if len(sys.argv) > 1 and sys.argv[1] == "work":
+        from csc_work_item import main as work_main
+        raise SystemExit(work_main(sys.argv[2:]))
+
     parser = argparse.ArgumentParser(description="Codex Swarm Command (CSC) CLI v2.0")
     subparsers = parser.add_subparsers(dest="command")
 
@@ -761,6 +768,9 @@ def main():
     await_parser.add_argument("--task-id", required=True)
     await_parser.add_argument("--agents", nargs="+", default=["claude", "antigravity"])
     await_parser.add_argument("--timeout", type=float, default=120.0)
+
+    work_parser = subparsers.add_parser("work", help="Plan and coordinate conflict-free C3P work items")
+    work_parser.add_argument("work_args", nargs=argparse.REMAINDER)
 
     # lock
     lock_parser = subparsers.add_parser("lock", help="Lock management")

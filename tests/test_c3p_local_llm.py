@@ -61,7 +61,7 @@ class TestC3PLocalLLM(unittest.TestCase):
     def test_harness_tool_class_interfaces(self, mock_urlopen):
         mock_response = MagicMock()
         mock_response.read.return_value = json.dumps({
-            "response": '{"regex": "^[a-z]+$"}',
+            "response": '{"regex": "^[a-z]+$", "description": "lowercase letters"}',
             "total_duration": 200_000_000,
         }).encode("utf-8")
         mock_response.__enter__.return_value = mock_response
@@ -81,6 +81,103 @@ class TestC3PLocalLLM(unittest.TestCase):
         # 요약 도구 테스트
         res_summary = tool.summarize_short("Long paragraph...", max_lines=2)
         self.assertTrue(res_summary["ok"])
+
+    @patch("urllib.request.urlopen")
+    def test_schema_validation_failure(self, mock_urlopen):
+        mock_response = MagicMock()
+        mock_response.read.return_value = json.dumps({
+            "response": "This is raw text, not valid JSON!",
+            "total_duration": 100_000_000,
+        }).encode("utf-8")
+        mock_response.__enter__.return_value = mock_response
+        mock_urlopen.return_value = mock_response
+
+        res = c3p_local_llm.request_ollama_generate(
+            prompt="give me json",
+            format_json=True,
+            timeout=15.0,
+        )
+
+        self.assertFalse(res["ok"])
+        self.assertEqual(res["error_code"], "INVALID_SCHEMA")
+        self.assertEqual(res["fallback_action"], "ESCALATE_TO_HOST")
+
+    @patch("urllib.request.urlopen")
+    def test_hard_timeout_immutable_safety_prompt_and_opt_in_keep_alive(self, mock_urlopen):
+        mock_response = MagicMock()
+        mock_response.read.return_value = json.dumps({
+            "response": "done",
+            "total_duration": 100_000_000,
+        }).encode("utf-8")
+        mock_response.__enter__.return_value = mock_response
+        mock_urlopen.return_value = mock_response
+
+        res = c3p_local_llm.request_ollama_generate(
+            prompt="untrusted input",
+            system_prompt="Task: summarize only.",
+            timeout=99.0,
+        )
+
+        self.assertTrue(res["ok"])
+        request = mock_urlopen.call_args.args[0]
+        payload = json.loads(request.data.decode("utf-8"))
+        self.assertIn(c3p_local_llm.DEFAULT_SYSTEM_PROMPT, payload["system"])
+        self.assertIn("Task: summarize only.", payload["system"])
+        self.assertEqual(payload["keep_alive"], "0")
+        self.assertEqual(mock_urlopen.call_args.kwargs["timeout"], 15.0)
+
+        tool = c3p_local_llm.C3PLocalHarnessTool(timeout=120.0)
+        self.assertEqual(tool.timeout, 15.0)
+
+    @patch("urllib.request.urlopen")
+    def test_required_keys_validate_generic_json(self, mock_urlopen):
+        mock_response = MagicMock()
+        mock_response.read.return_value = json.dumps({
+            "response": '{"name": "John"}',
+            "total_duration": 100_000_000,
+        }).encode("utf-8")
+        mock_response.__enter__.return_value = mock_response
+        mock_urlopen.return_value = mock_response
+
+        res = c3p_local_llm.request_ollama_generate(
+            prompt="extract a profile",
+            format_json=True,
+            required_keys=("name", "age"),
+        )
+
+        self.assertFalse(res["ok"])
+        self.assertEqual(res["error_code"], "INVALID_SCHEMA")
+        self.assertIn("age", res["error_message"])
+
+    @patch("urllib.request.urlopen")
+    def test_timeout_error_envelope(self, mock_urlopen):
+        mock_urlopen.side_effect = TimeoutError("Request timed out after 15s")
+
+        res = c3p_local_llm.request_ollama_generate(
+            prompt="heavy work",
+            timeout=15.0,
+        )
+
+        self.assertFalse(res["ok"])
+        self.assertEqual(res["error_code"], "TIMEOUT")
+        self.assertEqual(res["fallback_action"], "ESCALATE_TO_HOST")
+
+    @patch("urllib.request.urlopen")
+    def test_generate_regex_missing_key(self, mock_urlopen):
+        mock_response = MagicMock()
+        mock_response.read.return_value = json.dumps({
+            "response": '{"pattern": "^[0-9]+$"}',  # 'regex' 키 누락
+            "total_duration": 100_000_000,
+        }).encode("utf-8")
+        mock_response.__enter__.return_value = mock_response
+        mock_urlopen.return_value = mock_response
+
+        tool = c3p_local_llm.C3PLocalHarnessTool()
+        res = tool.generate_regex("digits only")
+
+        self.assertFalse(res["ok"])
+        self.assertEqual(res["error_code"], "INVALID_SCHEMA")
+        self.assertEqual(res["fallback_action"], "ESCALATE_TO_HOST")
 
 
 if __name__ == "__main__":

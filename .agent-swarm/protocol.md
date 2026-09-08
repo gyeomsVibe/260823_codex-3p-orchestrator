@@ -33,6 +33,20 @@
 - 쓰기 작업 전 `registry.md`의 `owned_paths`와 `.agent-swarm/locks/`를 확인한다.
 - 쓰기 작업 카드는 하나의 소유자와 하나 이상의 구체적 경로를 지정한다.
 
+### 3.1. 자동 작업 조율 계약
+
+여러 도구가 참여하는 새 작업은 `python csc.py work`가 관리하는 단일 작업 항목(Work Item, 목표·담당·대상·완료 조건을 한데 적은 작업 카드)으로 먼저 등록한다.
+
+1. Codex만 작업 그래프(DAG, 선행 작업의 순서를 연결한 그림)를 만들고 승인한다.
+2. 각 항목은 `goal`, `scope`, `owner_hint`, `read_set`, `write_set`, `dependencies`, `acceptance`, `verification`, `risk`, `revision`을 가진다.
+3. 읽기 집합끼리는 병렬 실행할 수 있다. 어느 한쪽이라도 같은 파일이나 상위 폴더를 쓰면 앞 작업이 끝날 때까지 다음 주장을 거부한다.
+4. 작업자는 승인된 revision을 `claim`하고 받은 펜싱 토큰(fencing token, 낡은 작업 결과를 식별하는 증가 번호)을 RESULT와 함께 제출한다. revision 또는 토큰이 다르면 조율기가 결과를 거부한다.
+5. 임대(lease, 담당권이 유효한 제한 시간)는 하트비트(heartbeat, 작업자가 살아 있음을 알리는 신호)로 연장한다. 시간만 보고 조용히 소유권을 빼앗지 않는다. Codex가 만료를 확인해 `revoke-expired`를 실행하며 재배차는 한 번만 허용한다.
+6. 이 조율기는 협력적 통제(advisory control, 도구들이 정해진 입구를 사용할 때 효력이 있는 규칙)다. 운영체제의 직접 파일 쓰기까지 차단하지 않으므로 기존 `.agent-swarm/locks/`, 허용 경로, 샌드박스, 최종 diff 검사를 함께 사용한다.
+7. commit, push, 삭제, 설치, 인증 변경 같은 P2 사용자 승인 경계는 그대로 유지한다.
+
+기본 흐름은 `plan -> approve -> ready -> claim -> heartbeat -> submit -> review`다. 명령과 검증 근거는 `docs/44_C3P_AUTOMATIC_WORK_COORDINATION_IMPLEMENTATION_AND_EVIDENCE.md`를 따른다.
+
 ## 4. `.agent-swarm` 공동 채팅방
 
 `.agent-swarm/chat/`를 세 도구의 공식 채팅방으로 사용한다.

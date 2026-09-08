@@ -39,15 +39,12 @@ Thumbs.db
 .agent-swarm/logs/
 .agent-swarm/workers/
 .agent-swarm/locks/
-.agent-swarm/messages/audit.jsonl
-.agent-swarm/messages/all_inbox.jsonl
-.agent-swarm/messages/antigravity_inbox.jsonl
-.agent-swarm/messages/claude_inbox.jsonl
-
-# --- PRE-PUSH G0 감사에서 추가 (2026-09-05) ---
-# 런타임 메시지 로그: 세션 ID·대화 원문·PID 가 누적된다. 정본은 chat/ 이다.
-.agent-swarm/messages/queue.jsonl
-.agent-swarm/messages/codex_inbox.jsonl
+.agent-swarm/coordination/
+.agent-swarm/messages/*.jsonl
+.agent-swarm/watchers/
+.agent-swarm/telemetry/
+.agent-swarm/scripts/
+.agent-swarm/BUILD_PHASE
 .agent-swarm/dead-letter/
 # 수직 슬라이스 실험용 SQLite. 재생성 가능한 산출물이다.
 .agent-swarm/slice.db

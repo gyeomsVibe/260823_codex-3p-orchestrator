@@ -127,6 +127,11 @@ class TestBoundedCliExecutor(unittest.TestCase):
         self.assertEqual(result, "evidence ready")
         command = popen.call_args.args[0]
         self.assertEqual(command[command.index("--output-format") + 1], "stream-json")
+        self.assertEqual(
+            command[command.index("--log-file") + 1],
+            str(PROJECT_ROOT / ".agent-swarm" / "logs" / "antigravity-cli.log"),
+        )
+        self.assertIn("--sandbox", command)
         self.assertNotIn("--dangerously-skip-permissions", command)
         controlled_prompt = command[command.index("--print") + 1]
         self.assertIn("Do not invoke a terminal or shell", controlled_prompt)

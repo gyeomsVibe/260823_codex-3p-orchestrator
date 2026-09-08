@@ -37,6 +37,18 @@
 31. `user/README.md` — 사용자 및 지도교수 문서 팩 마스터 인덱스
 32. `27_C3P_AUTHENTICATED_FAILURE_AND_HEADLESS_CLI_RESEARCH.md` — 인증된 실패 통보, Claude 턴 제한, Antigravity 헤드리스 권한 문제의 공개자료 연구와 단계별 해결안
 33. `28_ANTIGRAVITY_CAPACITY_ROUTING_RESEARCH_AND_DESIGN.md` — Antigravity에 긴 열람·반복을 맡기고 Codex·Claude 희소 토큰을 판단·압축 감시에 집중하는 예산절약형 C3P 근거·역할·파일럿 설계
+34. `29_C3P_AUTONOMOUS_MODEL_AND_REASONING_ROUTING_DESIGN.md` — 자율 모델 및 추론 라우팅 설계
+35. `30_C3P_SAVINGS_GENERALIZATION_AND_THREE_TASK_EXPERIMENT_PLAN.md` — 절감 일반화 및 3대 과제 실험 계획
+36. `35_C3P_COUNCIL_OFFICIAL_NAME_AND_USAGE_GUIDE.md` — C3P 협의체 공식 속칭 및 쉬운 사용 안내
+37. `36_OLLAMA_LOCAL_TOOL_SPEC.md` — Ollama 로컬 도구 표준 규격
+38. `37_C3P_ASYMMETRIC_QUOTA_BUDGET_SAVING_OS.md` — 비대칭 쿼터 절감 OS 아키텍처
+39. `38_C3P_DELEGATED_REPORTING_AND_SPOKESPERSON_ARCHITECTURE.md` — 사령관-대변인 브리핑 아키텍처 (가설적 목표치 및 사령관 권한 명시)
+40. `39_C3P_OLLAMA_ZERO_TOKEN_HARNESS_INTEGRATED_SPEC.md` — 로컬 0원 Ollama 하네스 통합 최종 구현 설계서 (협력적 격리 방어)
+41. `40_C3P_CONSOLIDATED_BUDGET_SAVING_SPECIFICATION.md` — 37·38·39 통합 예산절감 운영 규격서
+42. `41_C3P_RCS_THREE_TASK_BENCHMARK_EXECUTION_PLAN.md` — R-C-S 3대 태스크 벤치마크 실행 계획서
+43. `42_C3P_RCS_BENCHMARK_RESULTS.md` — R-C-S 3대 태스크 벤치마크 실측 결과 보고서 (가설적 추정 참고치 명시)
+44. `43_C3P_AUTOMATIC_WORK_COORDINATION_RESEARCH.md` — 펜싱 토큰과 작업 그래프 기초 연구 및 결함 검토
+45. `44_C3P_AUTOMATIC_WORK_COORDINATION_IMPLEMENTATION_AND_EVIDENCE.md` — 공개자료 교차검증, C3P 조율 최종 설계, 실제 명령, 테스트 증거와 단계적 적용 기준
 
 ## 운영 규칙
 

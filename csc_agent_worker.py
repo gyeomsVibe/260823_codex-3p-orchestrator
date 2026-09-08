@@ -97,6 +97,9 @@ class BoundedCliExecutor:
         self.process_tree_terminator = process_tree_terminator
         self.telemetry_recorder = telemetry_recorder
         self.telemetry_path = self.project_root / ".agent-swarm" / "telemetry" / "antigravity.jsonl"
+        self.antigravity_log_path = (
+            self.project_root / ".agent-swarm" / "logs" / "antigravity-cli.log"
+        )
         claude_config_dir = Path(
             os.environ.get("CLAUDE_CONFIG_DIR", Path.home() / ".claude")
         ).expanduser()
@@ -129,6 +132,7 @@ class BoundedCliExecutor:
         controlled_prompt = ANTIGRAVITY_HARNESS_CONTRACT + prompt
         return [
             "agy", "--mode", "plan", "--sandbox", "--disable-slash-commands",
+            "--log-file", str(self.antigravity_log_path),
             "--output-format", "stream-json", "--print-timeout", f"{seconds}s",
             "--print", controlled_prompt,
         ]

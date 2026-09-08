@@ -148,6 +148,21 @@ sequenceDiagram
 
 상세 근거와 실측 결과는 `docs/11_REALTIME_3P_AND_EMERGENCY_QUORUM.md`를 따른다.
 
+## 10. 중복·충돌 없는 자동 작업 조율
+
+C3P 실기동 뒤 둘 이상의 도구에 새 작업을 배차할 때는 자연어 합의만으로 소유권을 정하지 않는다. `python csc.py work`의 단일 작업 항목(Work Item, 목표와 소유 범위를 기록한 작업 카드)을 사용한다.
+
+1. Codex가 목표를 작은 항목으로 나누고 읽기 집합(`read_set`), 쓰기 집합(`write_set`), 선행 작업(`dependencies`), 완료 조건(`acceptance`), 검증 명령(`verification`)을 등록한다.
+2. Codex가 작업 그래프(DAG, 어떤 일을 먼저 끝내야 하는지 표시한 순서도)를 승인한 뒤 `ready` 결과만 배차한다.
+3. 읽기 전용이며 자원이 겹치지 않는 항목만 병렬 처리한다. 같은 파일·폴더를 읽고 쓰거나 함께 쓰는 항목은 직렬 처리한다.
+4. 작업자는 `claim`에서 받은 revision과 펜싱 토큰(fencing token, 낡은 결과를 구별하는 증가 번호)을 보존하고 `heartbeat`로 담당권을 갱신한다.
+5. `submit` 결과는 Codex가 수용 기준과 실제 검사 결과를 보고 `review --decision accept|iterate`로 판정한다. 만료·실패 뒤 재배차는 한 번만 허용한다.
+6. 조율기를 거치지 않은 직접 파일 쓰기를 물리적으로 차단하지 못하므로 기존 경로 락과 최종 diff 감사를 함께 적용한다. 쓰기 범위 위반은 `CALL_OUT` 대상이다.
+
+간단한 읽기 한 건은 기존 TASK로 바로 보낼 수 있다. 같은 목표에서 둘 이상의 도구가 쓰거나, 선후 관계가 있거나, 공유 실행 자원을 쓰면 작업 항목 등록을 생략하지 않는다. 현재 실행 중인 작업은 소유 파일과 상태를 먼저 조사한 후 새 그래프로 옮기며, 이미 진행한 일을 소급해 완료로 꾸미지 않는다.
+
+상세 규격은 `docs/44_C3P_AUTOMATIC_WORK_COORDINATION_IMPLEMENTATION_AND_EVIDENCE.md`, 상태 전이는 `csc_work_item.py`, 회귀 검사는 `tests/test_csc_work_item.py`를 따른다.
+
 ### 전문용어 3단 병기 (2026-09-07 신설)
 
 전문용어는 **한국어 + 영어 원어 + 쉬운 설명** 세 가지를 함께 적는다.
