@@ -1,0 +1,210 @@
+<!doctype html>
+<html lang="ko">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>03. 3대 AI 도구 협업 방식 다시 설계하기</title>
+<style>
+:root{--bg:#faf9f7;--fg:#1a1a18;--mut:#6b6862;--line:#e2ded6;--card:#fff;
+--ok:#0f766e;--bad:#b91c1c;--warn:#b45309;--accent:#6b4fbb}
+@media(prefers-color-scheme:dark){:root{--bg:#171614;--fg:#ecebe8;--mut:#9b968d;
+--line:#312f2b;--card:#201f1c;--ok:#5eead4;--bad:#f87171;--warn:#fbbf24;--accent:#a78bfa}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);
+font:16px/1.8 -apple-system,"Segoe UI","Malgun Gothic",sans-serif}
+.wrap{max-width:820px;margin:0 auto;padding:34px 18px 90px}
+h1{font-size:25px;margin:0 0 4px;line-height:1.35}
+h2{font-size:19px;margin:38px 0 12px;padding-bottom:8px;border-bottom:2px solid var(--line)}
+h3{font-size:16px;margin:24px 0 8px}
+.sub{color:var(--mut);font-size:14px;margin-bottom:26px}
+.lead{background:var(--card);border:2px solid var(--accent);border-radius:12px;
+padding:18px 20px;margin-bottom:28px}
+.lead b{font-size:17px;display:block;margin-bottom:6px}
+p{margin:10px 0}
+table{width:100%;border-collapse:collapse;margin:14px 0;font-size:14.5px}
+th,td{border:1px solid var(--line);padding:8px 11px;text-align:left;vertical-align:top}
+th{background:rgba(128,128,128,.1);font-weight:700}
+td.num{text-align:right;font-variant-numeric:tabular-nums}
+code{background:rgba(128,128,128,.14);padding:1px 6px;border-radius:4px;font-size:.9em}
+pre{background:var(--card);border:1px solid var(--line);border-left:4px solid var(--accent);
+border-radius:8px;padding:13px 15px;overflow-x:auto;font-size:13.5px;line-height:1.65}
+blockquote{margin:16px 0;padding:12px 16px;border-left:4px solid var(--warn);
+background:var(--card);border-radius:0 8px 8px 0}
+blockquote p{margin:4px 0}
+.bad{color:var(--bad);font-weight:700}
+.ok{color:var(--ok);font-weight:700}
+.box{background:var(--card);border:1px solid var(--line);border-radius:9px;padding:14px 16px;margin:14px 0}
+.box.danger{border-left:5px solid var(--bad)}
+.box.good{border-left:5px solid var(--ok)}
+.kv{display:grid;grid-template-columns:auto 1fr;gap:4px 14px;font-size:14.5px}
+.kv b{color:var(--mut);font-weight:600;white-space:nowrap}
+footer{margin-top:44px;padding-top:16px;border-top:1px solid var(--line);
+color:var(--mut);font-size:13px;line-height:1.75}
+.tag{display:inline-block;font-size:12px;padding:2px 9px;border-radius:99px;
+border:1px solid var(--line);color:var(--mut);margin-left:6px}
+</style>
+<div class="wrap">
+
+<h1>세 AI 도구가 함께 일하는 방식을 처음부터 다시 설계했습니다</h1>
+<div class="sub">보고서 03 · 2026년 9월 7일 · 작성 Claude Code
+<span class="tag">협의 전 · 제안 단계</span></div>
+
+<div class="lead">
+<b>결론부터 — 지금 만든 것을 더 만들지 않고, 줄이자는 제안입니다.</b>
+지난 이틀간 만든 프로그램은 <b>18개 파일 5,901줄</b>입니다.
+그런데 실제로 세 도구가 주고받은 대화는 <b>161건</b>뿐이었습니다.
+대화를 나르는 장치가 대화보다 커졌습니다.
+</div>
+
+<h2>1. 무엇이 문제였나</h2>
+
+<h3>비유로 먼저 말씀드리면</h3>
+<p>세 사람이 쪽지를 주고받게 하려고 <b>전용 우체국을 지었습니다.</b>
+그런데 우체국 직원들이 출근·퇴근하는 기록이 쪽지보다 훨씬 많았습니다.
+게다가 우체국이 문을 닫아도 쪽지는 <b>그냥 책상에 놓아두는 방식으로 잘 전달됐습니다.</b></p>
+
+<div class="box danger">
+<h3 style="margin-top:0">실제로 잰 숫자</h3>
+<table>
+<tr><th>항목</th><th class="num">건수</th><th>설명</th></tr>
+<tr><td>세 도구가 실제로 주고받은 말</td><td class="num">161</td><td>이게 진짜 내용물입니다</td></tr>
+<tr><td class="bad">연결됐다 끊겼다 한 기록</td><td class="num bad">1,930</td><td>내용은 없고 "접속함/끊김"만</td></tr>
+</table>
+<p><b class="bad">비율 12 대 1.</b> 짐보다 포장재가 열두 배 무거웠습니다.</p>
+</div>
+
+<h3>왜 이렇게 됐나</h3>
+<p>연결이 자꾸 끊기니까 <b>"살아 있는지 확인하는 장치"</b>를 만들었고,
+그 장치가 세 번이나 틀려서 세 번 고쳤고,
+그 판정 결과를 보여주려고 <b>감시 화면</b>을 만들었습니다.</p>
+
+<blockquote>
+<p>없어도 될 것을 지키려고 만든 것들입니다.</p>
+</blockquote>
+
+<h3>결정적인 사실 하나</h3>
+<p>오늘 그 우체국(브로커)은 <b>최소 네 번 죽었습니다.</b>
+그때마다 메시지는 <b class="ok">문제없이 전달됐습니다.</b>
+심지어 오늘 가장 생산적이었던 대화 — 다른 프로젝트 담당 AI와 여덟 번 주고받으며
+버그 두 개를 잡아낸 코드 검토 — 는 <b>그 우체국을 거치지도 않았습니다.</b></p>
+
+<blockquote>
+<p><b>작동을 멈춰도 아무도 불편하지 않은 부품은, 필요한 부품이 아닙니다.</b></p>
+</blockquote>
+
+<h2>2. 더 근본적인 착각</h2>
+
+<p>지금 방식은 <b>"셋이 동시에 모여서 회의한다"</b>는 전제로 만들어졌습니다.
+그런데 셋은 동시에 존재할 수가 없습니다.</p>
+
+<table>
+<tr><th>도구</th><th>왜 자리를 비우나</th><th>오늘 실제</th></tr>
+<tr><td>Codex</td><td>사용량 한도에 걸림</td><td class="bad">91분 연속 무응답</td></tr>
+<tr><td>Antigravity</td><td>권한 문제로 실행 거부</td><td class="bad">36시간 무응답</td></tr>
+<tr><td>Claude Code</td><td>사용자가 열어야 존재</td><td>세션에 묶임</td></tr>
+</table>
+
+<blockquote>
+<p><b>동시에 있어야 돌아가는 규칙을, 동시에 있을 수 없는 셋 위에 올렸습니다.</b>
+그래서 결정이 안 나고 멈추는 일이 반복됐습니다.</p>
+</blockquote>
+
+<h2>3. 남의 실패에서 배운 것</h2>
+
+<p>같은 걸 만들다 실패한 개발자의 공개 기록을 찾았습니다.
+6개월과 3,000달러를 쓴 뒤 남긴 말입니다.</p>
+
+<div class="box danger">
+<p><b>이메일 한 통을 쓰려고 AI 8명으로 팀을 짰고, 다섯 줄짜리 글에 2만 5천 달러 예산이 잡혔다.</b></p>
+<p style="color:var(--mut);font-size:13.5px;margin-bottom:0">
+출처: <a href="https://dev.to/dpelleri/5-brutal-lessons-from-building-a-multi-agent-ai-system-and-how-to-avoid-my-epic-fails-35aa">5 brutal lessons from building a multi-agent AI system</a></p>
+</div>
+
+<p>우리도 형태가 같습니다. <b>조율하는 기구가 조율할 일보다 커졌습니다.</b></p>
+
+<h2>4. 그래서 이렇게 바꾸자는 제안입니다</h2>
+
+<table>
+<tr><th></th><th>지금</th><th>바꾼 뒤</th></tr>
+<tr><td>프로그램</td><td>18개 파일 5,901줄</td><td class="ok">6개만 남기고 3개는 창고로</td></tr>
+<tr><td>항상 켜둘 프로그램</td><td>3개 (우체국 1, 일꾼 2)</td><td class="ok">0개</td></tr>
+<tr><td>사용자 화면</td><td>감시판 + 대화기록 2종</td><td class="ok">대화기록 1종</td></tr>
+<tr><td>시작 방법</td><td>매번 "c3p 발동" 입력</td><td class="ok">도구를 켜면 자동</td></tr>
+<tr><td>모이는 방식</td><td>동시에 모여 회의</td><td class="ok">각자 시간에 우편함 확인</td></tr>
+</table>
+
+<h3>회의 대신 우편함</h3>
+<p>셋이 만날 수 없다면, <b>만나지 않는 방식으로 바꾸면 됩니다.</b></p>
+<pre>지금   셋이 동시에 있어야 결정된다   →  한 명 없으면 멈춤
+바꾼 뒤 각자 자기 시간에 확인한다     →  안 온 사람은 "기권"으로 기록</pre>
+<p>이미 만들어 둔 규칙에 <b>"자리에 없으면 기권"</b>이 있습니다.
+여기에 <b>시계</b>만 달아주면 됩니다. 그게 스케줄러입니다.</p>
+
+<h3>스케줄러가 하는 일 세 가지</h3>
+<table>
+<tr><th>이름</th><th>주기</th><th>하는 일</th><th>드는 비용</th></tr>
+<tr><td>점호</td><td>4시간마다</td><td>각 도구가 안 읽은 메시지를 읽고 한 줄 남김</td><td>적음</td></tr>
+<tr><td>기록 갱신</td><td>30분마다</td><td>대화기록 페이지를 새로 만듦</td><td class="ok">0 (AI 안 부름)</td></tr>
+<tr><td>마감</td><td>안건마다 1회</td><td>정해진 시각에 표를 세고 결정</td><td>적음</td></tr>
+</table>
+
+<div class="box good">
+<p><b>예산 측면에서 중요한 점:</b> 기록을 새로 만드는 일에는 <b>AI를 부르지 않습니다.</b>
+파일을 읽어 옮기는 일이라 계산기면 충분합니다.</p>
+<p>지금은 <b>대화가 하나도 없어도 프로그램 3개가 계속 돌고 있습니다.</b>
+바꾼 뒤에는 <b>일이 있을 때만</b> 비용이 듭니다.</p>
+</div>
+
+<h2>5. 정직하게 말씀드릴 한계</h2>
+
+<div class="box danger">
+<h3 style="margin-top:0">못 하는 것이 있습니다</h3>
+<p><b>Codex와 Antigravity는 "자동으로 시작하게" 강제할 수 없습니다.</b>
+Claude Code에는 시작할 때 자동 실행되는 장치가 있지만, 나머지 둘에는 그런 장치가 없습니다.
+문서에 "이렇게 하라"고 적어둘 수는 있어도 <b>읽었는지 확인할 방법이 없습니다.</b></p>
+<p>그래서 스케줄러가 더 중요해집니다 — <b>스스로 오지 않으면 시계가 불러야 하니까요.</b></p>
+</div>
+
+<h3>아직 확인하지 못한 것</h3>
+<div class="kv">
+<b>스케줄러</b><span>이 프로젝트에서 실제로 도는지 <b>아직 등록해보지 않았습니다</b></span>
+<b>비용 수치</b><span>호출 횟수 추정이지 실제로 잰 토큰이 아닙니다</span>
+<b>합의 여부</b><span>이 문서는 <b>Claude 혼자 만든 제안</b>입니다. 세 도구 협의 전입니다</span>
+</div>
+
+<h2>6. 다음에 할 일</h2>
+
+<table>
+<tr><th></th><th>할 일</th><th>승인 필요?</th></tr>
+<tr><td>S1</td><td>안 쓰는 프로그램 3개를 창고로 옮김 (지우지 않음)</td><td class="ok">불필요 · 되돌릴 수 있음</td></tr>
+<tr><td>S2</td><td>Claude Code가 켜질 때 자동 합류하도록 변경</td><td class="ok">불필요</td></tr>
+<tr><td>S3</td><td><b>스케줄러 3종 등록</b></td><td class="bad">필요 ← 여기만</td></tr>
+<tr><td>S4</td><td>대화기록을 스케줄러가 갱신하도록 전환</td><td class="ok">불필요</td></tr>
+<tr><td>S5~S6</td><td>먼저 다 만들고, 그다음 오류 수정</td><td class="ok">불필요</td></tr>
+</table>
+
+<h3>"먼저 만들고 나중에 고친다"에 대해</h3>
+<p>빠르게 만들라는 지시를 그대로 따르되, <b>한 가지만 다르게 하겠습니다.</b></p>
+<p>거짓말을 잡아내는 장치를 <b>끄지 않고, 막는 대신 적어두기만</b> 하도록 낮추겠습니다.</p>
+<blockquote>
+<p><b>끄면 나중에 무엇을 고쳐야 하는지 알 수 없습니다.</b>
+속도는 지시대로 내되, 빚은 장부에 남겨둡니다.</p>
+</blockquote>
+
+<h2>7. 지금 정해주실 것</h2>
+<div class="box">
+<p><b>S3(스케줄러 등록)만 승인이 필요합니다.</b> 나머지는 되돌릴 수 있어 바로 진행합니다.</p>
+<p>그리고 이 제안 자체를 <b>세 도구가 함께 검토</b>하도록 넘길지도 정해주십시오.
+지시하신 "계획 단계부터 협의"에 따르면 넘기는 것이 맞지만,
+<b>Codex와 Antigravity가 지금 응답하지 않는 상태</b>라 시간이 걸릴 수 있습니다.</p>
+</div>
+
+<footer>
+<b>이 보고서의 근거</b><br>
+숫자는 전부 실제로 세었습니다. 파일 줄 수는 <code>wc -l</code>,
+메시지 건수는 <code>queue.jsonl</code>, 연결 기록은 <code>audit.jsonl</code>을 직접 셌습니다.<br><br>
+<b>기술 상세</b>는 <code>docs/25_C3P_V2_ZERO_BASE_REDESIGN.md</code>에 있습니다.
+이 보고서는 그 문서를 전문용어 없이 옮긴 것입니다.<br><br>
+<b>아직 아무것도 바꾸지 않았습니다.</b> 이건 제안이며, 승인 전에는 지금 구조가 그대로 돌아갑니다.
+</footer>
+</div>
+</html>

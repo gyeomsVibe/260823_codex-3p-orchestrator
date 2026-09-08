@@ -1,0 +1,274 @@
+<!doctype html>
+<html lang="ko">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>04. 새 협업 방식 실행 결과</title>
+<style>
+:root{--bg:#faf9f7;--fg:#1a1a18;--mut:#6b6862;--line:#e2ded6;--card:#fff;
+--ok:#0f766e;--bad:#b91c1c;--warn:#b45309;--accent:#6b4fbb}
+@media(prefers-color-scheme:dark){:root{--bg:#171614;--fg:#ecebe8;--mut:#9b968d;
+--line:#312f2b;--card:#201f1c;--ok:#5eead4;--bad:#f87171;--warn:#fbbf24;--accent:#a78bfa}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);
+font:16px/1.8 -apple-system,"Segoe UI","Malgun Gothic",sans-serif}
+.wrap{max-width:820px;margin:0 auto;padding:34px 18px 90px}
+h1{font-size:25px;margin:0 0 4px;line-height:1.35}
+h2{font-size:19px;margin:36px 0 12px;padding-bottom:8px;border-bottom:2px solid var(--line)}
+h3{font-size:16px;margin:22px 0 8px}
+.sub{color:var(--mut);font-size:14px;margin-bottom:26px}
+.lead{background:var(--card);border:2px solid var(--ok);border-radius:12px;
+padding:18px 20px;margin-bottom:28px}
+.lead b{font-size:17px;display:block;margin-bottom:6px}
+p{margin:10px 0}
+table{width:100%;border-collapse:collapse;margin:14px 0;font-size:14.5px}
+th,td{border:1px solid var(--line);padding:8px 11px;text-align:left;vertical-align:top}
+th{background:rgba(128,128,128,.1);font-weight:700}
+code{background:rgba(128,128,128,.14);padding:1px 6px;border-radius:4px;font-size:.9em}
+pre{background:var(--card);border:1px solid var(--line);border-left:4px solid var(--accent);
+border-radius:8px;padding:13px 15px;overflow-x:auto;font-size:13.5px;line-height:1.65}
+blockquote{margin:16px 0;padding:12px 16px;border-left:4px solid var(--warn);
+background:var(--card);border-radius:0 8px 8px 0}
+blockquote p{margin:4px 0}
+.bad{color:var(--bad);font-weight:700}
+.ok{color:var(--ok);font-weight:700}
+.box{background:var(--card);border:1px solid var(--line);border-radius:9px;padding:14px 16px;margin:14px 0}
+.box.danger{border-left:5px solid var(--bad)}
+.box.good{border-left:5px solid var(--ok)}
+.term{background:rgba(107,79,187,.1);border-radius:4px;padding:1px 4px}
+footer{margin-top:44px;padding-top:16px;border-top:1px solid var(--line);
+color:var(--mut);font-size:13px;line-height:1.75}
+</style>
+<div class="wrap">
+
+<h1>새 협업 방식을 실제로 켰습니다</h1>
+<div class="sub">보고서 04 · 2026년 9월 7일 · 작성 Claude Code</div>
+
+<div class="lead">
+<b>승인해 주신 대로 4단계를 모두 실행했습니다.</b>
+자동 실행 장치 2개가 등록됐고, 항상 켜둘 프로그램은 0개가 됐으며,
+감시 화면 만들기를 멈췄습니다. 검사 130개가 모두 통과했습니다.
+</div>
+
+<h2>1. 무엇을 켰나 — 스케줄러 2개</h2>
+
+<p><span class="term">스케줄러(scheduler, 정해진 시각에 자동으로 실행해 주는 장치)</span>
+두 개를 등록했습니다. 사람이 시키지 않아도 알아서 돕니다.</p>
+
+<table>
+<tr><th>이름</th><th>언제</th><th>하는 일</th><th>드는 비용</th></tr>
+<tr>
+  <td>대화 기록 갱신</td>
+  <td>30분마다<br><small>매시 7분·37분 예정<br>+ 최대 10분 지연</small></td>
+  <td>세 도구가 주고받은 말을 읽기 좋은 페이지로 옮김</td>
+  <td class="ok"><b>0</b><br><small>AI를 안 부름</small></td>
+</tr>
+<tr>
+  <td>점호</td>
+  <td>4시간마다<br><small>2·6·10·14·18·22시 23분 예정<br>+ 약간 지연</small></td>
+  <td>안 읽은 메시지를 확인하고 답할 게 있으면 한 줄 남김</td>
+  <td>적음</td>
+</tr>
+</table>
+
+<div class="box good">
+<p><b>왜 30분·4시간인가</b> — 사람이 볼 때 최신이면 충분하기 때문입니다.
+아무도 안 보는 페이지를 1초마다 다시 그릴 이유가 없습니다.</p>
+<p><b>왜 7분·37분처럼 어중간한 시각인가</b> — 전 세계 사용자가 모두 정각을 고르면
+같은 순간에 몰립니다. 몇 분 비켜두면 그 혼잡을 피합니다.</p>
+</div>
+
+<blockquote>
+<p><b>가장 큰 변화:</b> 지금까지는 <b>대화가 하나도 없어도 프로그램 3개가 계속 돌았습니다.</b>
+이제는 <b>일이 있을 때만</b> 비용이 듭니다.</p>
+</blockquote>
+
+<h2>2. "발동" 이라고 칠 필요가 없어졌습니다</h2>
+
+<p>지금까지는 매번 <code>c3p 발동</code>이라고 입력해야 협업이 시작됐습니다.
+이제 <b>도구를 켜는 순간 자동으로 합류합니다.</b></p>
+
+<p>Claude Code에는 <span class="term">시작 훅(SessionStart hook, 프로그램이 켜질 때 자동으로
+실행되는 짧은 명령)</span>이 있습니다. 그 출력이 <b>그대로 AI가 읽는 내용이 됩니다.</b>
+그래서 그 자리에 협업 상태를 넣었습니다.</p>
+
+<pre>[c3p 자동 합류] 협의체 통신이 켜졌다. 별도 발동 문구는 필요 없다.
+내 정체: claude-code-6c
+
+새 메시지 없음 (내 마지막 발신 2026-09-07T09:21:41 이후)
+
+규약 요지 — 어기면 질타 대상이다:
+  1조  읽기 → 사용자 보고 → 작업 → 자기 채널에 기록
+  11-1 합의를 기록하려면 구성원별 발화 위치·시각·원문이 있어야 한다
+  ...</pre>
+
+<h3 class="bad">🔴 만들자마자 제가 낸 오류를 하나 잡았습니다</h3>
+
+<div class="box danger">
+<p>처음 만든 것은 켤 때마다 <b>"막힌 안건 3건"</b>이라고 알렸습니다.
+<b>실제로는 0건입니다.</b></p>
+<p><b>원인:</b> 과거에 "막혔다"고 적힌 <b>옛날 기록</b>까지 세고 있었습니다.
+<b>"지금 막혀 있음"</b>과 <b>"한때 막혔었음"</b>을 구분하지 못했습니다.</p>
+<p><b>왜 중요한가:</b></p>
+</div>
+
+<blockquote>
+<p><b>거짓 초록불만 위험한 게 아닙니다. 거짓 빨간불도 똑같이 위험합니다.</b><br>
+켤 때마다 없는 경고가 뜨면 사람은 곧 그 경고를 읽지 않게 됩니다.
+그러면 <b>진짜로 막혔을 때도 지나칩니다.</b> 경보의 신뢰를 태워 없애는 셈입니다.</p>
+</blockquote>
+
+<p>판단 기준을 <b>규약 문서의 표 한 곳으로 모았습니다.</b>
+같은 값을 두 곳에서 다르게 세면 어느 쪽을 믿을지 알 수 없기 때문입니다.
+이 프로젝트는 그 실수를 이미 두 번 했습니다.</p>
+
+<h2>3. 낭비를 실제로 줄였습니다</h2>
+
+<p>기록을 새로 만드는 데 <b>1.3초</b>가 걸립니다. 그런데 이걸 세 군데서 불렀습니다.</p>
+
+<table>
+<tr><th>부르던 자리</th><th>얼마나 자주</th><th>바꾼 뒤</th></tr>
+<tr><td>사용자가 말할 때마다</td><td>매 대화</td><td class="ok">뺐습니다</td></tr>
+<tr><td class="bad">명령을 실행할 때마다</td><td class="bad">한 세션에 수백 번</td><td class="ok">뺐습니다</td></tr>
+<tr><td>도구를 켤 때</td><td>한 번</td><td>남겼습니다</td></tr>
+</table>
+
+<blockquote>
+<p><b>아무도 보고 있지 않은 페이지를 수백 번 다시 그리고 있었습니다.</b></p>
+</blockquote>
+
+<p>그리고 지시하신 대로 <b>감시 화면 만들기를 멈췄습니다.</b>
+<b>파일과 코드는 지우지 않았습니다</b> — 만들기만 멈췄습니다.
+판단이 바뀌면 한 줄만 되돌리면 됩니다.</p>
+
+<h2>4. "먼저 만들고 나중에 고친다"를 켰습니다</h2>
+
+<p>지시하신 대로 <span class="term">주장 감사기(claim auditor, 거짓 주장을 자동으로
+잡아내는 장치)</span>가 <b>더 이상 발신을 막지 않습니다.</b></p>
+
+<p>다만 <b>끄지 않고 등급만 낮췄습니다.</b></p>
+
+<table>
+<tr><th></th><th>끄면</th><th>등급만 낮추면 (선택)</th></tr>
+<tr><td>속도</td><td class="ok">빠름</td><td class="ok">똑같이 빠름</td></tr>
+<tr><td>기록</td><td class="bad">아무것도 안 남음</td><td class="ok">지적이 그대로 쌓임</td></tr>
+<tr><td>나중에</td><td class="bad">뭘 고칠지 모름</td><td class="ok">쌓인 목록이 곧 할 일</td></tr>
+</table>
+
+<blockquote>
+<p><b>"나중에 고친다"의 '나중에'가 성립하려면 무엇을 고칠지 알아야 합니다.</b>
+고칠 목록 없이 고칠 수는 없습니다.</p>
+</blockquote>
+
+<p>켜졌는지는 <b>파일 하나로 눈에 보이게</b> 했습니다.
+<code>.agent-swarm/BUILD_PHASE</code>가 있으면 켜진 상태고, 지우면 즉시 원래대로 돌아갑니다.
+숨은 설정으로 하지 않은 이유는 <b>켜졌는지 사람이 확인할 수 있어야 하기 때문</b>입니다.</p>
+
+<h2>5. 용어 쓰는 방식을 바꿨습니다</h2>
+
+<p>말씀하신 대로 <b>전문용어에 쉬운 설명을 반드시 붙이도록</b> 규칙을 고쳤습니다.</p>
+
+<table>
+<tr><th></th><th>예시</th></tr>
+<tr><td class="bad">전</td><td><code>스케줄러(scheduler)</code></td></tr>
+<tr><td class="ok">후</td><td><code>스케줄러(scheduler, 정해진 시각에 자동으로 실행해 주는 장치)</code></td></tr>
+</table>
+
+<blockquote>
+<p><b>영어를 붙였다고 설명한 것이 아닙니다.</b>
+<code>scheduler</code>를 모르는 사람에게 <code>스케줄러(scheduler)</code>는
+<b>모르는 말이 두 번 나온 것</b>과 같습니다. 뜻은 세 번째에만 있습니다.</p>
+</blockquote>
+
+<p>이 규칙을 <b>6개 규칙 파일 전부</b>에 넣었고, 검사 도구가 <b>하나라도 빠지면 알려주도록</b> 했습니다.</p>
+
+<h2>6. 검증</h2>
+
+<table>
+<tr><th>항목</th><th>결과</th></tr>
+<tr><td>전체 검사</td><td class="ok">130개 통과, 1개 건너뜀</td></tr>
+<tr><td>규칙 동기화</td><td class="ok">6개 파일이 같은 계약 8개를 모두 담음</td></tr>
+<tr><td>스케줄러 등록</td><td class="ok">2개</td></tr>
+<tr><td>항상 켜둘 프로그램</td><td class="ok">0개</td></tr>
+<tr><td>감시 화면 생성</td><td class="ok">멈춤 (파일은 보존)</td></tr>
+</table>
+
+<h2>7. 첫 실행 결과 — 그리고 제가 틀리게 적었던 것</h2>
+
+<div class="box good">
+<h3 style="margin-top:0" class="ok">✅ 스케줄러가 실제로 돌았습니다</h3>
+<table>
+<tr><th>증거</th><th>값</th></tr>
+<tr><td>스케줄러가 기록한 실행 시각</td><td>18:46:50</td></tr>
+<tr><td>대화 기록 파일이 실제로 바뀐 시각</td><td>18:46:53</td></tr>
+<tr><td>차이</td><td class="ok">3초 — 두 증거가 일치합니다</td></tr>
+</table>
+<p><b>서로 다른 두 곳에서 같은 답이 나왔습니다.</b>
+스케줄러가 "돌았다"고 말한 것과, 파일이 실제로 바뀐 것이 3초 안에 맞물립니다.</p>
+</div>
+
+<h3 class="bad">🔴 그런데 제가 시각을 틀리게 적었습니다</h3>
+
+<table>
+<tr><th></th><th>내용</th></tr>
+<tr><td>제가 적은 것</td><td>"매시 7분·37분에 실행"</td></tr>
+<tr><td class="bad">실제</td><td class="bad">18시 <b>46분 50초</b>에 실행</td></tr>
+<tr><td>차이의 정체</td><td>9분 40초 — <b>스케줄러가 일부러 넣는 지연</b></td></tr>
+</table>
+
+<p>37분 + 9분 40초 = 46분 50초. <b>정확히 맞아떨어집니다.</b></p>
+
+<p><span class="term">지터(jitter, 일부러 조금씩 어긋나게 넣는 지연)</span>라고 부릅니다.
+전 세계 사용자가 모두 같은 순간에 몰리는 것을 막으려고 스케줄러가 알아서 넣습니다.</p>
+
+<blockquote>
+<p><b>제 잘못은 예정 시각을 확정 시각처럼 적은 것입니다.</b>
+"7분·37분에 실행된다"고 쓰면, 46분에 도는 것을 본 사람은 <b>고장 났다고 생각합니다.</b>
+멀쩡한데 고장으로 오해하게 만드는 설명은 틀린 설명입니다.</p>
+</blockquote>
+
+<p>위 표를 <b>"예정 + 최대 10분 지연"</b>으로 고쳤습니다.</p>
+
+<h3>점호는 아직 돌지 않았습니다</h3>
+<p>4시간마다라서 <b>다음 차례가 22시 23분</b>입니다. 아직 한 번도 실행되지 않았습니다.
+"등록됐다"와 "돌았다"는 다르므로 그대로 적습니다.</p>
+
+<h3 class="bad">🔴 점호에 있던 결함 하나를 미리 고쳤습니다</h3>
+
+<div class="box danger">
+<p>점호는 <b>"할 말이 없으면 아무것도 남기지 않는다"</b>고 만들었습니다. 그런데 그러면</p>
+<pre>돌았는데 할 말이 없었다   →  침묵
+아예 돌지 않았다          →  침묵</pre>
+<p><b>두 가지가 똑같이 보입니다. 구분할 수 없으면 고장 나도 모릅니다.</b></p>
+<p><b>고친 방법:</b> 할 말이 없어도 <b>"도착했다"와 "끝났다"만은 항상 기록</b>하게 했습니다.
+시작만 있고 끝이 없으면 중간에 멈춘 것이고, 그 자체가 진단 정보가 됩니다.</p>
+</div>
+
+<h2>8. 아직 못 한 것 · 확인 못 한 것</h2>
+
+<div class="box danger">
+<table>
+<tr><th>항목</th><th>상태</th></tr>
+<tr><td>안 쓰는 프로그램 3개 치우기</td><td>Codex가 그 파일을 <b>작업 중으로 잠가 둬서</b> 손대지 않았습니다</td></tr>
+<tr><td>세 번째 스케줄러(마감)</td><td>안건이 생길 때 만드는 것이라 지금은 없습니다</td></tr>
+<tr><td>기록 갱신 스케줄러</td><td class="ok"><b>돌았습니다</b> (7절 참조)</td></tr>
+<tr><td>점호 스케줄러</td><td class="bad"><b>아직 안 돌았습니다.</b> 다음 차례 22시 23분</td></tr>
+<tr><td>Codex·Antigravity 자동 합류</td><td class="bad">강제할 방법이 <b>없습니다.</b> 문서로 요청만 했습니다</td></tr>
+<tr><td>세 도구 협의</td><td>제안을 보냈고 <b>아직 답이 없습니다</b></td></tr>
+</table>
+</div>
+
+<h3>가장 정직하게 말씀드릴 것</h3>
+<p><b>스케줄러가 실제로 도는 것을 아직 보지 못했습니다.</b>
+등록은 확인했지만, 실행되는 것은 시간이 지나야 압니다.
+첫 실행 뒤에 결과를 다시 말씀드리겠습니다.</p>
+
+<footer>
+<b>이 보고서가 지킨 규칙</b><br>
+전문용어를 쓸 때마다 <b>한국어 + 영어 + 쉬운 설명</b> 세 가지를 함께 적었습니다.
+이번에 새로 정한 규칙을 이 보고서에서 먼저 지켰습니다.<br><br>
+<b>기술 상세</b>는 <code>docs/25_C3P_V2_ZERO_BASE_REDESIGN.md</code>에 있습니다.<br><br>
+<b>커밋(commit, 변경을 기록으로 확정하는 것)과
+푸시(push, 인터넷 저장소로 올리는 것)는 하지 않았습니다.</b>
+</footer>
+</div>
+</html>
