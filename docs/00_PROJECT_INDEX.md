@@ -57,6 +57,7 @@
 51. `50_C3P_BUDGET_SAVING_MODE_README_INTEGRATION_WALKTHROUGH.md` — C3P 협의체 비대칭 쿼터 예산절약 모드 리드미 반영 및 269개 테스트 통과 완결 결과 보고서
 52. `51_C3P_WINDOWS_CONCURRENCY_AND_SOCKET_SUPERVISOR_RESEARCH.md` — Windows 동시성 충돌 방어 및 소켓 감시 슈퍼바이저 심층 연구 보고서
 53. `52_C3P_WINDOWS_CONCURRENCY_HEALING_WALKTHROUGH.md` — C3P 협의체 Windows 동시성 충돌 방어 및 소켓 감시 슈퍼바이저 자가 치유 완결 보고서
+54. `53_사용자_안내_C3P_예산절약_모드_반영_및_Windows_런타임_치유_전과정_종합보고서(c3p_budget_and_runtime_healing_walkthrough).md` — 모르는 걸 모르는 사용자 대상 C3P 예산절약 모드 및 런타임 치유 전과정 종합보고서
 
 ## 운영 규칙
 
