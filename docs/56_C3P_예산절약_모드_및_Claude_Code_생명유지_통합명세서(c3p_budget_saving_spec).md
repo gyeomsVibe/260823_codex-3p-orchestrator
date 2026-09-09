@@ -1,6 +1,6 @@
 # 🏛️ C3P 예산절약 모드 및 Claude Code 생명유지 통합 명세서 (C3P Budget-Saving Mode & Claude Code Living Integration Spec)
 
-> **문서 식별자:** `docs/56_C3P_BUDGET_SAVING_MODE_AND_CLAUDE_CODE_LIVING_INTEGRATION_SPEC.md`  
+> **문서 식별자:** `docs/56_C3P_예산절약_모드_및_Claude_Code_생명유지_통합명세서(c3p_budget_saving_spec).md`  
 > **상태:** 제안 및 Codex 컨펌 대기 (PROPOSED / AWAITING_CODEX_CONFIRMATION)  
 > **표결 참여:** Antigravity (제안), Codex (검토·컨펌 주체), Claude Code (수신 참조, 휴면 대기)  
 > **작성 일자:** 2026-09-09  
@@ -20,15 +20,15 @@ C3P 협의체는 **Codex(뇌), Claude Code(면역계/근육), Antigravity(감각
 
 ## 2. 외부 학술 연구 및 오픈소스 딥리서치 종합 (Deep Research Synthesis)
 
-C3P 예산절약 모드는 다음 4가지 검증된 학술 및 산업계 아키텍처에 기반합니다:
+C3P 예산절약 모드는 다음 학술 및 산업계 아키텍처를 참조하여 설계되었습니다:
 
 ```mermaid
 graph LR
     subgraph Research Foundations [예산절약 학술 및 오픈소스 기반]
-        Frugal["<b>FrugalGPT (Stanford, 2023)</b><br>LLM Cascade & Approximation"]
-        Route["<b>RouteLLM (LMSYS/Berkeley, 2024)</b><br>Preference-based Dynamic Router"]
-        BAMAS["<b>BAMAS (AAAI 2024)</b><br>Budget-Aware Multi-Agent System"]
-        Supervisor["<b>SupervisorAgent / OPTIMA (2024)</b><br>Communication Tax 억제 & Context Shield"]
+        Frugal["<b>FrugalGPT (Stanford, 2023)</b><br>Cascade & Approximation"]
+        Route["<b>RouteLLM (LMSYS/Berkeley, 2024)</b><br>Dynamic Router Benchmark"]
+        BAMAS["<b>BAMAS (AAAI-26)</b><br>Budget-Aware Multi-Agent Topology"]
+        Supervisor["<b>Supervisor / Context Shield</b><br>통신세 억제 보조 가설"]
     end
     
     subgraph C3P 3-Tier Architecture [C3P 3층 예산절약 아키텍처]
@@ -43,14 +43,14 @@ graph LR
     Supervisor --> L3
 ```
 
-1. **FrugalGPT (Stanford Univ., 2023)**: 
-   * 단일 프론티어 모델 전면 호출의 비효율성을 지적하고, **프롬프트 축소(Prompt Adaptation)**, **소형 모델 근사치(LLM Approximation)**, **저비용 순차 승격(LLM Cascade)**을 통해 최대 98%의 비용을 절감.
-2. **RouteLLM (LMSYS / UC Berkeley, 2024)**: 
-   * 입력 쿼리의 난이도를 경량 분류하여 85% 이상의 작업을 소형/로컬 모델로 보내고 필요한 15%만 프론티어 모델로 라우팅하여 성능을 95% 유지.
-3. **BAMAS (Budget-Aware Multi-Agent Systems, AAAI 2024)**:
-   * 다중 에이전트 환경에서 비대칭 예산(Asymmetric Budget) 제약 하에 에이전트 간 상호작용 토폴로지를 선형 계획법(ILP)으로 최적화하여 86% 비용 절감.
-4. **SupervisorAgent & OPTIMA (2024)**:
-   * 멀티에이전트 시스템에서 가장 큰 토큰 낭비 요인인 **"통신세(Communication Tax, 에이전트 간의 장황한 잡담과 중복 관측 데이터)"**를 런타임 감독관이 3줄 이내로 압축 필터링.
+1. **FrugalGPT (Stanford Univ., 2023, [arXiv:2305.05176](https://arxiv.org/abs/2305.05176))**: 
+   * 단일 프론티어 모델 전면 호출의 비효율성을 지적하고, **프롬프트 축소(Prompt Adaptation)**, **소형 모델 근사치(LLM Approximation)**, **저비용 순차 승격(LLM Cascade)**을 통해 특정 실험 조건에서 비용 절감 가능성을 입증한 참조 아키텍처.
+2. **RouteLLM (LMSYS / UC Berkeley, 2024, [arXiv:2406.18665](https://arxiv.org/abs/2406.18665))**: 
+   * 입력 쿼리의 난이도를 경량 라우터로 분류하여 특정 벤치마크에서 비용을 최대 85% 절감하면서 GPT-4 성능의 95%를 유지한 연구 결과. (※ 보편적인 작업 고정 비율이 아닌 동적 라우팅의 참조 연구임)
+3. **BAMAS (Budget-Aware Multi-Agent Systems, AAAI-26, [AAAI 논문](https://ojs.aaai.org/index.php/AAAI/article/view/40226))**:
+   * 다중 에이전트 환경에서 비대칭 예산 제약 하에 에이전트 간 상호작용 토폴로지를 최적화하여 비용을 대폭 절감한 실험 연구. (※ C3P에 수치가 직접 적용되는 것은 아니며 예산 인식 토폴로지 개념을 차용함)
+4. **통신세 억제 및 컨텍스트 실드 (보조 가설)**:
+   * 멀티에이전트 시스템에서 에이전트 간 장황한 잡담과 중복 관측 데이터로 인한 **"통신세(Communication Tax)"**를 런타임 감독관이 3줄 요약 등으로 압축 필터링하는 실무적 가설 설계.
 
 ---
 

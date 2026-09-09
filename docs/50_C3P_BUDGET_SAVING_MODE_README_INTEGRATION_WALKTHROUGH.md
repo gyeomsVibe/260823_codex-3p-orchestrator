@@ -11,7 +11,7 @@
 
 사용자의 날카로운 비판 지적(**/CRITIC**)에 따라:
 1. 기존 `README.md`가 "단일 지능 유기체 비유"와 "우편실 비유"에만 치우쳐, 실제 외부 클라우드 토큰을 80% 이상 아끼는 **"비대칭 쿼터 예산절약 모드(Asymmetric Quota Budget-Saving OS)"**와 기계적 Git 동시성 조율 엔진이 전면에 누락되어 있던 결함을 확인했습니다.
-2. 최신 학술 논문(arXiv BAMAS), 산업계 블로그(Requesty.ai, Anthropic), 커뮤니티(Reddit, HackerNews) 딥리서치를 통해 다중 에이전트 비용 최적화와 Git 동시성 통제 원리를 집약한 **정본 연구 문서([`docs/49`](docs/49_C3P_BUDGET_SAVING_MODE_AND_GIT_COORDINATION_RESEARCH.md))**를 확립했습니다.
+2. 최신 학술 논문(arXiv BAMAS), 산업계 블로그(Requesty.ai, Anthropic), 커뮤니티(Reddit, HackerNews) 딥리서치를 통해 다중 에이전트 비용 최적화와 Git 동시성 통제 원리를 집약한 **정본 연구 문서([`docs/49`](49_C3P_BUDGET_SAVING_MODE_AND_GIT_COORDINATION_RESEARCH.md))**를 확립했습니다.
 3. 사용자의 정식 승인을 득하여, `README.md` 표제부 바로 아래에 **"🏛️ C3P 비대칭 쿼터 예산절약 모드"** 전용 섹션을 신설하고, 회귀 방지 단위 테스트를 추가하여 전체 269개 테스트를 통과시켰습니다.
 
 ---

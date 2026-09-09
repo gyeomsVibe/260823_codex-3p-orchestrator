@@ -1,7 +1,7 @@
 # 🚀 제5장: 실전 조작 및 치트키 가이드
 
 ## 1. 기본 발동 명령어
-- `c3p 발동` (대소문자 무관): 세 AI(Codex, Claude, Antigravity)를 동시 가동하여 협업 체계를 시작하고, 프로젝트 전용 `.agent-swarm/dashboard.html`을 최신 스냅샷으로 갱신합니다.
+- `c3p 발동` (대소문자 무관): C3P 협의체 3도구(Codex, Claude, Antigravity)의 실기동을 요청하고, 프로젝트 전용 `.agent-swarm/dashboard.html`을 최신 스냅샷으로 갱신합니다. 실제 도구 연결·회신·합의 여부는 `python csc.py status` 및 하트비트로 별도 실측합니다.
 - `이 프로젝트 점검해서 교정해줘` (원터치 vibe-check): 자가진단 스킬을 발동하여 오류를 자동 탐색하고 최소 단위로 안전하게 교정합니다.
 
 ## 2. GPT 실전 치트키 10선

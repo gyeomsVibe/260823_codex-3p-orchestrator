@@ -24,7 +24,7 @@
 18. `18_PRE_PUSH_G0_COMMIT_CANDIDATE.md` — 최초 커밋 후보의 공개 범위·개인정보·검증 감사
 19. `19_CODEX_INSTRUCTION_A1_STATUS_REVIEW.md` — Codex 지시 A1의 수행 상태와 잔여 위험 검토
 20. `20_CODEX_RESYNC_AND_C1_CLOSURE.md` — Codex 재동기화와 C1 마감 준비 기록
-21. `MIA_SKILL_AUTHORING_STANDARD.md` — MIA 에이전트 스킬 제작 원리 표준 (v2.0)
+21. `07-1_MIA_SKILL_AUTHORING_STANDARD.md` — MIA 에이전트 스킬 제작 원리 표준 (v2.0)
 22. `21_C1_봉인_감사_커밋_푸시_실행기록.md` — 진단부터 봉인·표결·사용자 승인·Git 실행까지의 쉬운 설명
 23. `reference-materials/README.md` — 사용자 원자료·초안·스크린샷의 설명형 파일명 인덱스
 24. `22_ANTIGRAVITY_BACKGROUND_CLI_VALUE_ASSESSMENT.md` — Antigravity를 Bridge 대신 백그라운드 CLI로 운용하는 세 대안과 조건부 Go 판정

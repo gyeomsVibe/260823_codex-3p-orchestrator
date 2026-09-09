@@ -3,7 +3,7 @@
 ## 1. 개요 및 달성 성과
 - **MIA 시리즈 스킬 신규 구축**: [codex-3p-orchestrator](../../.agents/skills/codex-3p-orchestrator/SKILL.md) 생성 완료.
 - **3대 AI 도구 실시간 통신 브로커 구현**: [csc_broker.py](../../csc_broker.py) 및 [csc.py v2.0](../../csc.py) 통합.
-- **MIA 에이전트 스킬 제작원리 표준 확립**: [MIA_SKILL_AUTHORING_STANDARD.md](../MIA_SKILL_AUTHORING_STANDARD.md) 제정.
+- **MIA 에이전트 스킬 제작원리 표준 확립**: [07-1_MIA_SKILL_AUTHORING_STANDARD.md](../07-1_MIA_SKILL_AUTHORING_STANDARD.md) 제정.
 - **3자 심층 토론 및 4대 렌즈 평가 명세**: [07_3P_COMMUNICATION_AND_BROKER_SPEC.md](../07_3P_COMMUNICATION_AND_BROKER_SPEC.md) 작성.
 
 ---

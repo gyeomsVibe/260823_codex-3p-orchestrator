@@ -1,6 +1,6 @@
 # 📋 [MIA 전략절차] C3P 예산절약 모드 전수분석 및 종합 구현 설계계획서 (Implementation Plan)
 
-> **문서 식별자:** `docs/57_C3P_BUDGET_SAVING_MODE_COMPREHENSIVE_IMPLEMENTATION_PLAN.md`  
+> **문서 식별자:** `docs/57_C3P_예산절약_모드_전수분석_및_종합구현_설계계획서(c3p_budget_saving_implementation_plan).md`  
 > **상태:** 제안 및 사령관 Codex 컨펌 대기 (PROPOSED / AWAITING_CODEX_CONFIRMATION)  
 > **관련 상위 문서:** `docs/54`, `docs/55`, `docs/56`  
 > **표결 참여:** Antigravity (입안), Codex (사령관 판정 대기), Claude Code (수신 참조, 휴면 대기)  
@@ -28,14 +28,14 @@ graph TD
 ## 2. 수집·연구된 핵심 자료 및 실측 데이터 전수 정리 (/STRUCTURED FEW-SHOT)
 
 ### ① 학술 연구 및 오픈소스 패턴 (Deep Research Synthesis)
-1. **FrugalGPT (Stanford Univ., 2023)**:
-   * 3대 축: 프롬프트 축소(Prompt Adaptation), 소형 모델 근사치(LLM Approximation), 저비용 순차 승격(LLM Cascade). 최대 98% 비용 절감 검증.
-2. **RouteLLM (LMSYS / UC Berkeley, 2024)**:
-   * 입력 복잡도 분류 라우팅. 85% 일상 요청을 소형 모델로 전달하여 95% 품질 유지, 85% 비용 절감.
-3. **BAMAS (Budget-Aware Multi-Agent Systems, AAAI 2024)**:
-   * 비대칭 쿼터 제약 하 에이전트 상호작용 토폴로지 최적화. 86% 비용 절감.
-4. **SupervisorAgent & OPTIMA (2024)**:
-   * 에이전트 간 "통신세(Communication Tax)" 3줄 압축 억제.
+1. **FrugalGPT (Stanford Univ., 2023, [arXiv:2305.05176](https://arxiv.org/abs/2305.05176))**:
+   * 프롬프트 축소, 소형 모델 근사치, 저비용 순차 승격을 통해 특정 조건에서 비용 절감 효과를 보인 참조 연구.
+2. **RouteLLM (LMSYS / UC Berkeley, 2024, [arXiv:2406.18665](https://arxiv.org/abs/2406.18665))**:
+   * 입력 복잡도 분류 라우팅. 벤치마크 상에서 소형 모델을 조합해 95% 품질 유지 및 최대 85% 비용 절감을 보고한 참조 연구(작업 고정 비율 규칙이 아님).
+3. **BAMAS (Budget-Aware Multi-Agent Systems, AAAI-26, [AAAI 논문](https://ojs.aaai.org/index.php/AAAI/article/view/40226))**:
+   * 비대칭 예산 제약 하 에이전트 상호작용 토폴로지 최적화 참조.
+4. **통신세 억제 및 컨텍스트 실드 (보조 가설)**:
+   * 에이전트 간 불필요한 장황 대화(Communication Tax)를 3줄 요약 작업 카드로 필터링하는 실무 가설.
 
 ### ② 로컬 런타임 실측 데이터 (Verified Facts)
 * **Ollama 엔드포인트**: `http://localhost:11434` 정상 (15:02 실측 `ok: true`, 8.26초 응답 확인).

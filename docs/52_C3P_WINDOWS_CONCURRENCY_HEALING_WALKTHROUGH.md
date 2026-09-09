@@ -13,7 +13,7 @@
 1. **[워커 돌연사 버그]**: `doctor`나 `status` 조회가 1초마다 도는 심장박동 파일(`claude.json`)을 읽는 찰나, 원자적 쓰기(`os.replace`)가 Windows의 **강제적 파일 잠금(mandatory file locking, 파일이 열려 있는 동안 다른 프로그램의 접근을 운영체제가 강제로 막는 방식)**에 걸려 `PermissionError: [WinError 5]`를 반환했을 때, 하트비트 스레드가 단 1회 실패로 `stop.set()`을 호출하여 **정상 동작 중이던 워커 데몬 전체를 즉시 자살**시키는 문제.
 2. **[좀비 워커 방치 및 활성화 타임아웃]**: 워커의 메인 스레드가 브로커 소켓 연결을 잃어버렸음에도 불구하고 하트비트 스레드가 살아있으면, `ensure_worker`가 파일 타임스탬프만 보고 정상(`worker_is_fresh=True`)으로 오인하여 **새로 띄우지 않고 `reused`로 방치**하여 `activate`가 영구 타임아웃되는 문제. 부모가 `log_handle.close()`를 즉시 호출하여 자식의 표준 입출력이 무효화되는 문제.
 
-사용자의 정식 승인 하에 최신 딥리서치 연구 문서([`docs/51`](docs/51_C3P_WINDOWS_CONCURRENCY_AND_SOCKET_SUPERVISOR_RESEARCH.md))의 **대안 C(권고안)**에 따른 자가 치유 패치를 성공적으로 집행했습니다.
+사용자의 정식 승인 하에 최신 딥리서치 연구 문서([`docs/51`](51_C3P_WINDOWS_CONCURRENCY_AND_SOCKET_SUPERVISOR_RESEARCH.md))의 **대안 C(권고안)**에 따른 자가 치유 패치를 성공적으로 집행했습니다.
 
 ---
 
