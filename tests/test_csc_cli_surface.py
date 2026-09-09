@@ -68,6 +68,7 @@ class TestCscCliSurface(unittest.TestCase):
             cwd=PROJECT_ROOT, capture_output=True, text=True, check=True,
         )
         self.assertIn("activate", result.stdout)
+        self.assertIn("trigger", result.stdout)
         self.assertIn("roster", result.stdout)
         self.assertIn("await", result.stdout)
 

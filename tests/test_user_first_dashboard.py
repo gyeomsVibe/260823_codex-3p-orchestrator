@@ -204,6 +204,16 @@ class TestC3PTriggerContract(unittest.TestCase):
                 self.assertIn("`c3p 발동`도 정식 호출문", text)
                 self.assertIn("대소문자를 구분하지", text)
 
+    def test_budget_saving_trigger_contract_is_synchronized_across_tool_adapters(self):
+        contract = "예산절약 모드 발동문"
+        for rel in (
+            "AGENTS.md", "CLAUDE.md", "GEMINI.md",
+            ".agents/skills/codex-3p-orchestrator/SKILL.md",
+        ):
+            with self.subTest(rel):
+                with open(os.path.join(PROJECT_ROOT, rel), encoding="utf-8") as f:
+                    self.assertIn(contract, f.read())
+
 
 class TestPerProjectDashboardActivation(unittest.TestCase):
     """C3P 발동은 성공·실패 여부와 무관하게 해당 프로젝트 감시판을 남긴다."""

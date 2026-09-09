@@ -23,6 +23,7 @@ from pathlib import Path
 from csc_auth import AuthenticationError, ReplayWindow, verify_envelope
 import csc_storage
 import csc_runtime
+from c3p_trigger import is_budget_saving_trigger, is_user_absence_trigger
 from csc_worker import pid_is_alive
 
 SWARM_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), ".agent-swarm")
@@ -763,6 +764,11 @@ def main():
     activate_parser = subparsers.add_parser("activate", help="Start/reuse broker and two registered CLI adapters")
     activate_parser.add_argument("--timeout", type=float, default=10.0, help="Readiness deadline in seconds")
     activate_parser.add_argument("--budget-saving", action=argparse.BooleanOptionalAction, default=True, help="Run in zero-token local standby budget-saving mode")
+    trigger_parser = subparsers.add_parser(
+        "trigger", help="Activate C3P only for an explicit supported phrase"
+    )
+    trigger_parser.add_argument("phrase", help="Exact activation phrase after whitespace normalization")
+    trigger_parser.add_argument("--timeout", type=float, default=10.0, help="Readiness deadline in seconds")
     subparsers.add_parser("roster", help="Show live broker socket registrations")
 
     watch_parser = subparsers.add_parser("watch", help="Start zero-token real-time message watcher")
@@ -827,6 +833,41 @@ def main():
         except (csc_runtime.ActivationError, OSError, RuntimeError) as exc:
             print(f"❌ [CSC Activate] {exc}", file=sys.stderr)
             sys.exit(1)
+    elif args.command == "trigger":
+        if is_budget_saving_trigger(args.phrase):
+            init_swarm(False)
+            try:
+                result = activate_project(
+                    Path(__file__).resolve().parent,
+                    timeout=args.timeout,
+                    budget_saving=True,
+                )
+                result["trigger"] = args.phrase
+                print(json.dumps(result, ensure_ascii=False, indent=2))
+            except (csc_runtime.ActivationError, OSError, RuntimeError) as exc:
+                print(f"❌ [CSC Trigger] {exc}", file=sys.stderr)
+                sys.exit(1)
+        elif is_user_absence_trigger(args.phrase):
+            init_swarm(False)
+            try:
+                result = activate_project(
+                    Path(__file__).resolve().parent,
+                    timeout=args.timeout,
+                    budget_saving=True,
+                )
+                result["trigger"] = args.phrase
+                result["user_absence_mode"] = True
+                print(json.dumps(result, ensure_ascii=False, indent=2))
+            except (csc_runtime.ActivationError, OSError, RuntimeError) as exc:
+                print(f"❌ [CSC Trigger] {exc}", file=sys.stderr)
+                sys.exit(1)
+        else:
+            print(
+                "❌ [CSC Trigger] 지원하지 않거나 명시적이지 않은 발동문입니다. "
+                "예: C3P 예산절약 모드, C3P 사용자부재 모드",
+                file=sys.stderr,
+            )
+            sys.exit(2)
     elif args.command == "roster":
         try:
             result = csc_runtime.query_roster(Path(__file__).resolve().parent)
