@@ -6,7 +6,7 @@
 > **‘단일 지능 유기체’**는 세 도구의 유기적 분업 역할을 설명하는 공학적 비유이고, 실제 검토와 합의를 수행하는 운영 주체의 정식 속칭은 **`C3P 협의체`**입니다.  
 > 자세한 구분은 [docs/35 C3P 협의체 공식 명칭과 바로 쓰는 방법](docs/35_C3P_COUNCIL_OFFICIAL_NAME_AND_USAGE_GUIDE.md)을 확인하세요.
 
-[![Tests](https://img.shields.io/badge/Unit_Tests-309_Passed-10b981?style=flat-square&logo=python)](tests/)
+[![Tests](https://img.shields.io/badge/Unit_Tests-Run_Locally-64748b?style=flat-square&logo=python)](tests/)
 [![Principle Sync](https://img.shields.io/badge/User--First-6%2F6_Synced-3b82f6?style=flat-square)](.agent-swarm/USER_FIRST_PRINCIPLE.md)
 [![C3P Council](https://img.shields.io/badge/C3P_Council-Active-7c3aed?style=flat-square)](docs/35_C3P_COUNCIL_OFFICIAL_NAME_AND_USAGE_GUIDE.md)
 [![Budget Saving](https://img.shields.io/badge/Budget_Saving-Zero_Token-success?style=flat-square)](docs/61_사용자안내_C3P_예산절약_및_사용자부재_모드_운용_종합가이드(c3p_budget_and_absence_mode_guide).md)
@@ -277,7 +277,10 @@ python -m unittest discover -s tests -q
 
 * `c3p 발동` (대소문자 무관, 접두어 없이 단독 발동 가능)
 * `MIA 씨3피 발동` (MIA 전략 절차와 C3P 협업 동시 발동)
+* `MIA C3P 발동` (위 호출문과 같은 뜻)
 * `C3P 협의체와 검토해줘` (세 도구의 실제 회신 및 상호 합의 요구)
+
+`c3p`, `C3P 협의체`, `C3P협의체`만 단독으로 쓰면 실행하지 않습니다. 이름을 말한 것인지 실제 가동을 원하는 것인지 구별할 수 없기 때문입니다.
 * `MIA 코덱스커멘드 발동`
 * `$codex-3p-orchestrator`
 

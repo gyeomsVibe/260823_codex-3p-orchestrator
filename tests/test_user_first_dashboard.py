@@ -214,6 +214,13 @@ class TestC3PTriggerContract(unittest.TestCase):
                 with open(os.path.join(PROJECT_ROOT, rel), encoding="utf-8") as f:
                     self.assertIn(contract, f.read())
 
+    def test_call_phrase_contract_is_synchronized_across_tool_adapters(self):
+        for rel in ("AGENTS.md", "CLAUDE.md", "GEMINI.md", ".agents/skills/codex-3p-orchestrator/SKILL.md"):
+            with self.subTest(rel=rel), open(os.path.join(PROJECT_ROOT, rel), encoding="utf-8") as handle:
+                content = handle.read()
+            self.assertIn("C3P_CALL_PHRASE_CONTRACT_V1", content)
+            self.assertIn("`C3P 협의체와 검토해줘`", content)
+
 
 class TestPerProjectDashboardActivation(unittest.TestCase):
     """C3P 발동은 성공·실패 여부와 무관하게 해당 프로젝트 감시판을 남긴다."""
@@ -225,7 +232,10 @@ class TestPerProjectDashboardActivation(unittest.TestCase):
              mock.patch("csc_dashboard.write_dashboard", return_value=expected):
             result = csc.activate_project(csc.Path(PROJECT_ROOT), timeout=1)
         self.assertEqual(result["dashboard"]["project"], os.path.basename(PROJECT_ROOT))
-        self.assertEqual(result["dashboard"]["path"], expected)
+        self.assertEqual(
+            os.path.normcase(os.path.realpath(result["dashboard"]["path"])),
+            os.path.normcase(os.path.realpath(expected)),
+        )
         self.assertEqual(result["dashboard"]["kind"], "activation_snapshot")
 
     def test_failure_still_writes_dashboard_before_propagating(self):
