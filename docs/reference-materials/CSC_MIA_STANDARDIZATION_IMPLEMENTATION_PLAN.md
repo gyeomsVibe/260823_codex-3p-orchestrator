@@ -30,7 +30,7 @@ graph TD
 - **초저지연 양방향 Pub/Sub**: 파일 폴링 랙 없는 실시간 이벤트 전송 + 기존 JSONL 저장소 자동 동기화(하이브리드 백업).
 
 ### 3.2. [NEW] Codex 3P Orchestrator 커스텀 스킬 (`skills/codex-3p-orchestrator/`)
-- `SKILL.md`: Thin Core 규격 (500줄 미만, 명확한 트리거 `c3p 발동`, `MIA c3p 발동`, `MIA 씨3피 발동`, `MIA 코덱스커멘드 발동`, `$codex-3p-orchestrator`). ASCII 영문은 대소문자를 구분하지 않는다.
+- `SKILL.md`: Thin Core 규격 (500줄 미만, 명확한 트리거 `c3p 발동`, `MIA c3p 발동`, `MIA 씨3피 발동`, `MIA 코덱스커멘드 발동`, `$codex-3p-orchestrator`). 지원되는 자연어 호출문은 유니코드 대소문자를 구분하지 않는다.
 - `agents/openai.yaml`: Codex UI 메타데이터.
 - `references/`: 통신 프로토콜 명세, 오케스트레이션 헌법, 워커 제어 계약.
 

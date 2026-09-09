@@ -11,13 +11,15 @@ from c3p_trigger import (
 
 
 class C3PBudgetSavingTriggerTests(unittest.TestCase):
-    def test_explicit_korean_variants_and_ascii_case_are_recognized(self):
+    def test_explicit_korean_variants_and_unicode_casefold_are_recognized(self):
         for phrase in (
             "C3P 예산절약 모드",
             "c3p 예산절약 모드 발동",
             "  C3p   예산절약  모드  ",
             "예산절약 모드",
             "예산절약 모드 발동",
+            "C3P BUDGET-SAVING MODE",
+            "c3p Budget-Saving Mode Activate",
         ):
             with self.subTest(phrase=phrase):
                 self.assertTrue(is_budget_saving_trigger(phrase))
@@ -29,7 +31,10 @@ class C3PBudgetSavingTriggerTests(unittest.TestCase):
 
     def test_runtime_activation_is_exact_and_case_insensitive(self):
         self.assertTrue(is_runtime_activation_trigger("C3P 발동"))
+        self.assertTrue(is_runtime_activation_trigger("c3P 발동"))
         self.assertFalse(is_runtime_activation_trigger("c3p"))
+        self.assertEqual("mia_c3p_request", classify_call_phrase("MIA C3P 발동"))
+        self.assertEqual("mia_c3p_request", classify_call_phrase("mia c3p 발동"))
         self.assertEqual("council_review_request", classify_call_phrase("C3P 협의체와 검토해줘"))
         self.assertEqual("ambiguous", classify_call_phrase("C3P협의체"))
 
@@ -43,6 +48,7 @@ class C3PBudgetSavingTriggerTests(unittest.TestCase):
 
     def test_normalization_is_whitespace_and_case_only(self):
         self.assertEqual("c3p 예산절약 모드", normalize_trigger(" C3P  예산절약 모드 "))
+        self.assertEqual("c3p budget-saving mode", normalize_trigger("C3P BUDGET-SAVING MODE"))
         self.assertTrue(is_budget_saving_trigger("C3P 예산절약 모드"))
         with self.assertRaises(TypeError):
             normalize_trigger(None)  # type: ignore[arg-type]
@@ -77,6 +83,7 @@ class C3PBudgetSavingTriggerTests(unittest.TestCase):
             "사용자부재 모드",
             "사용자부재 모드 발동",
             "c3p user-absence mode",
+            "C3P USER-ABSENCE MODE ACTIVATE",
         ):
             with self.subTest(phrase=phrase):
                 self.assertTrue(is_user_absence_trigger(phrase))

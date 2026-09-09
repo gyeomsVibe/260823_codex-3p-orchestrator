@@ -192,7 +192,7 @@ class TestC3PTriggerContract(unittest.TestCase):
         with open(skill, encoding="utf-8") as f:
             text = f.read()
         self.assertIn('`"c3p 발동"`', text)
-        self.assertIn("ASCII 영문은 대소문자를 구분하지 않는다", text)
+        self.assertIn("호출문의 유니코드 대소문자를 구분하지 않는다", text)
         for spelling in ("c3p 발동", "C3P 발동", "C3p 발동"):
             self.assertEqual(spelling.casefold(), "c3p 발동")
 
@@ -219,6 +219,7 @@ class TestC3PTriggerContract(unittest.TestCase):
             with self.subTest(rel=rel), open(os.path.join(PROJECT_ROOT, rel), encoding="utf-8") as handle:
                 content = handle.read()
             self.assertIn("C3P_CALL_PHRASE_CONTRACT_V1", content)
+            self.assertIn("모든 자연어 호출문은 유니코드 대소문자를 구분하지", content)
             self.assertIn("`C3P 협의체와 검토해줘`", content)
 
     def test_readme_does_not_claim_phrase_alone_proves_consensus(self):
