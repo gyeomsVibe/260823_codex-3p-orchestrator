@@ -2,7 +2,12 @@ import unittest
 from unittest import mock
 
 import csc
-from c3p_trigger import is_budget_saving_trigger, normalize_trigger
+from c3p_trigger import (
+    classify_call_phrase,
+    is_budget_saving_trigger,
+    is_runtime_activation_trigger,
+    normalize_trigger,
+)
 
 
 class C3PBudgetSavingTriggerTests(unittest.TestCase):
@@ -21,6 +26,20 @@ class C3PBudgetSavingTriggerTests(unittest.TestCase):
         self.assertFalse(is_budget_saving_trigger("예산절약 모드의 설계를 검토한다"))
         self.assertFalse(is_budget_saving_trigger("C3P 예산절약 모드로 만들어 줘"))
         self.assertFalse(is_budget_saving_trigger("c3p 발동"))
+
+    def test_runtime_activation_is_exact_and_case_insensitive(self):
+        self.assertTrue(is_runtime_activation_trigger("C3P 발동"))
+        self.assertFalse(is_runtime_activation_trigger("c3p"))
+        self.assertEqual("council_review_request", classify_call_phrase("C3P 협의체와 검토해줘"))
+        self.assertEqual("ambiguous", classify_call_phrase("C3P협의체"))
+
+    def test_cli_runtime_activation_uses_the_same_safe_runtime_path(self):
+        with mock.patch.object(csc, "init_swarm"), mock.patch.object(
+            csc, "activate_project", return_value={"status": "ready"}
+        ) as activate, mock.patch("sys.argv", ["csc.py", "trigger", "C3P 발동"]):
+            csc.main()
+        activate.assert_called_once()
+        self.assertTrue(activate.call_args.kwargs["budget_saving"])
 
     def test_normalization_is_whitespace_and_case_only(self):
         self.assertEqual("c3p 예산절약 모드", normalize_trigger(" C3P  예산절약 모드 "))

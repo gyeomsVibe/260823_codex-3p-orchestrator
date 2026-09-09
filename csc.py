@@ -23,7 +23,11 @@ from pathlib import Path
 from csc_auth import AuthenticationError, ReplayWindow, verify_envelope
 import csc_storage
 import csc_runtime
-from c3p_trigger import is_budget_saving_trigger, is_user_absence_trigger
+from c3p_trigger import (
+    is_budget_saving_trigger,
+    is_runtime_activation_trigger,
+    is_user_absence_trigger,
+)
 from c3p_absence_state_store import arm_user_absence_mode
 from csc_worker import pid_is_alive
 
@@ -835,7 +839,7 @@ def main():
             print(f"❌ [CSC Activate] {exc}", file=sys.stderr)
             sys.exit(1)
     elif args.command == "trigger":
-        if is_budget_saving_trigger(args.phrase):
+        if is_runtime_activation_trigger(args.phrase) or is_budget_saving_trigger(args.phrase):
             init_swarm(False)
             try:
                 result = activate_project(
