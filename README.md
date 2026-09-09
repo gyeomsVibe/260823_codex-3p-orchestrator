@@ -6,11 +6,11 @@
 > **‘단일 지능 유기체’**는 세 도구의 유기적 분업 역할을 설명하는 공학적 비유이고, 실제 검토와 합의를 수행하는 운영 주체의 정식 속칭은 **`C3P 협의체`**입니다.  
 > 자세한 구분은 [docs/35 C3P 협의체 공식 명칭과 바로 쓰는 방법](docs/35_C3P_COUNCIL_OFFICIAL_NAME_AND_USAGE_GUIDE.md)을 확인하세요.
 
-[![Tests](https://img.shields.io/badge/Unit_Tests-272_Passed-10b981?style=flat-square&logo=python)](tests/)
+[![Tests](https://img.shields.io/badge/Unit_Tests-309_Passed-10b981?style=flat-square&logo=python)](tests/)
 [![Principle Sync](https://img.shields.io/badge/User--First-6%2F6_Synced-3b82f6?style=flat-square)](.agent-swarm/USER_FIRST_PRINCIPLE.md)
 [![C3P Council](https://img.shields.io/badge/C3P_Council-Active-7c3aed?style=flat-square)](docs/35_C3P_COUNCIL_OFFICIAL_NAME_AND_USAGE_GUIDE.md)
-[![Coordinator](https://img.shields.io/badge/Work_Item-SQLite_Fenced-059669?style=flat-square)](csc_work_item.py)
-[![Local SLM](https://img.shields.io/badge/Ollama_Harness-Zero_Token-d97706?style=flat-square)](c3p_local_llm.py)
+[![Budget Saving](https://img.shields.io/badge/Budget_Saving-Zero_Token-success?style=flat-square)](docs/61_사용자안내_C3P_예산절약_및_사용자부재_모드_운용_종합가이드(c3p_budget_and_absence_mode_guide).md)
+[![Absence Mode](https://img.shields.io/badge/Absence_Mode-Bounded_Deliberation-blueviolet?style=flat-square)](docs/61_사용자안내_C3P_예산절약_및_사용자부재_모드_운용_종합가이드(c3p_budget_and_absence_mode_guide).md)
 [![Python](https://img.shields.io/badge/Python-3.10%2B-blue?style=flat-square&logo=python)](https://python.org)
 [![License](https://img.shields.io/badge/License-MIT-gray?style=flat-square)](LICENSE)
 
@@ -19,8 +19,21 @@
 
 ---
 
+## 🚨 최신 핵심 모드: C3P 예산절약 모드 & 사용자부재 모드
+
+누구나 직관적으로 이해하고 바로 사용할 수 있는 2대 신규 자율 운용 모드입니다:
+
+| 핵심 모드 (Mode) | 핵심 동작 및 방어선 | 1초 발동 명령어 | 직관적 가이드 문서 |
+|---|---|---|---|
+| **🛡️ C3P 예산절약 모드**<br>(Budget-Saving Mode) | 대기 중 외부 AI 호출 0원, 사령관 Codex 쿼터 85% 절감 | `python csc.py trigger "C3P 예산절약 모드"` | [예산절약 모드 명세서](docs/56_C3P_예산절약_모드_및_Claude_Code_생명유지_통합명세서(c3p_budget_saving_spec).md) |
+| **🤖 C3P 사용자부재 모드**<br>(User-Absence Mode) | 외출 중 토큰 폭주 방지 (최대 5턴·15분 상한), P2 절대 경계(삭제/푸시 등) 자동 동결 | `python csc.py trigger "C3P 사용자부재 모드"` | [사용자부재 모드 설계서](docs/59_C3P_사용자부재_모드_상태머신_및_유한토론회_설계계획서(c3p_user_absence_mode_plan).md) |
+| **📊 실시간 상태 점검** | 브로커 및 워커 2/2 생존 실측 (`READY`, Exit 0) | `python csc.py status` | [종합 운용 가이드](docs/61_사용자안내_C3P_예산절약_및_사용자부재_모드_운용_종합가이드(c3p_budget_and_absence_mode_guide).md) |
+
+---
+
 ## 📑 목차 (Table of Contents)
 
+0. [🚨 최신 핵심 모드: C3P 예산절약 모드 & 사용자부재 모드](#-최신-핵심-모드-c3p-예산절약-모드--사용자부재-모드)
 1. [🌟 2대 독립 패키지 (핵심 산출물 바로가기)](#-2대-독립-패키지-핵심-산출물-바로가기)
 2. [💡 10초 만에 이해하는 우편실 비유](#-10초-만에-이해하는-우편실-비유)
 3. [🧬 유기체 3대 기관 모델 (Living Organ Model)](#-유기체-3대-기관-모델-living-organ-model)
