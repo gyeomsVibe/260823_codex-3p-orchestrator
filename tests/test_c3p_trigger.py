@@ -37,12 +37,16 @@ class C3PBudgetSavingTriggerTests(unittest.TestCase):
         self.assertTrue(activate.call_args.kwargs["budget_saving"])
 
     def test_cli_trigger_user_absence_mode(self):
+        armed = {"state": "ARMED", "trigger": "C3P 사용자부재 모드"}
         with mock.patch.object(csc, "init_swarm"), mock.patch.object(
             csc, "activate_project", return_value={"status": "ready"}
-        ) as activate, mock.patch("sys.argv", ["csc.py", "trigger", "C3P 사용자부재 모드"]):
+        ) as activate, mock.patch.object(csc, "arm_user_absence_mode", return_value=armed) as arm, mock.patch(
+            "sys.argv", ["csc.py", "trigger", "C3P 사용자부재 모드"]
+        ):
             csc.main()
         activate.assert_called_once()
         self.assertTrue(activate.call_args.kwargs["budget_saving"])
+        arm.assert_called_once()
 
     def test_explicit_user_absence_korean_variants_recognized(self):
         from c3p_trigger import is_user_absence_trigger

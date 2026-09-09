@@ -12,6 +12,7 @@ from c3p_absence_mode import (
     can_run_deliberation,
     check_p2_violation,
     evaluate_transition,
+    has_verified_consensus,
 )
 
 
@@ -34,9 +35,13 @@ class TestC3PAbsenceMode(unittest.TestCase):
         self.assertTrue(can_run_deliberation(is_ready=True, agenda="Valid agenda"))
 
     def test_transition_off_to_armed(self):
-        ctx = AbsenceContext()
+        ctx = AbsenceContext(is_budget_saving_active=True)
         res = evaluate_transition(AbsenceModeState.OFF, ctx)
         self.assertEqual(res.next_state, AbsenceModeState.ARMED)
+
+    def test_transition_off_stays_off_without_budget_saving_mode(self):
+        res = evaluate_transition(AbsenceModeState.OFF, AbsenceContext())
+        self.assertEqual(res.next_state, AbsenceModeState.OFF)
 
     def test_transition_armed_stays_armed_when_not_ready(self):
         ctx = AbsenceContext(is_ready=False, agenda="Optimize cache")
@@ -120,37 +125,55 @@ class TestC3PAbsenceMode(unittest.TestCase):
     def test_duplicate_argument_hash_stops(self):
         msgs = [
             DeliberationMessage(step=1, sender="codex", role="moderator", content="Identical point"),
-            DeliberationMessage(step=2, sender="antigravity", role="evidence", content="Identical point"),
+            DeliberationMessage(step=2, sender="codex", role="moderator", content="Identical point"),
         ]
         ctx = AbsenceContext(is_ready=True, agenda="Review", messages=msgs)
         res = evaluate_transition(AbsenceModeState.RUNNING, ctx)
         self.assertEqual(res.next_state, AbsenceModeState.NO_ACTIONABLE_CHANGE)
         self.assertEqual(res.reason, TerminalReason.DUPLICATE_HASH)
 
-    def test_consensus_implement_ready(self):
+    def test_identical_arguments_from_distinct_senders_are_not_duplicates(self):
         msgs = [
-            DeliberationMessage(
-                step=1,
-                sender="codex",
-                role="moderator",
-                content="Consensus agreed. Status is IMPLEMENT_READY.",
-            )
+            DeliberationMessage(step=1, sender="codex", role="moderator", content="Same point"),
+            DeliberationMessage(step=2, sender="antigravity", role="evidence", content="Same point"),
         ]
         ctx = AbsenceContext(is_ready=True, agenda="Review", messages=msgs)
+        res = evaluate_transition(AbsenceModeState.RUNNING, ctx)
+        self.assertEqual(res.next_state, AbsenceModeState.RUNNING)
+
+    def test_consensus_requires_structured_results_from_all_members(self):
+        messages = [
+            DeliberationMessage(
+                step=1, sender=sender, role="review", content="IMPLEMENT_READY is discussed",
+                correlation_id="C-1", decision="IMPLEMENT_READY",
+            )
+            for sender in ("codex", "claude", "antigravity")
+        ]
+        self.assertTrue(
+            has_verified_consensus(messages, {"codex", "claude", "antigravity"}, "C-1", "IMPLEMENT_READY")
+        )
+        self.assertFalse(
+            has_verified_consensus(messages[:-1], {"codex", "claude", "antigravity"}, "C-1", "IMPLEMENT_READY")
+        )
+
+    def test_consensus_implement_ready(self):
+        msgs = [
+            DeliberationMessage(step=index, sender=sender, role="review", content="Approved.",
+                               correlation_id="C-IMPLEMENT", decision="IMPLEMENT_READY")
+            for index, sender in enumerate(("codex", "claude", "antigravity"), 1)
+        ]
+        ctx = AbsenceContext(is_ready=True, agenda="Review", messages=msgs, correlation_id="C-IMPLEMENT")
         res = evaluate_transition(AbsenceModeState.RUNNING, ctx)
         self.assertEqual(res.next_state, AbsenceModeState.IMPLEMENT_READY)
         self.assertEqual(res.reason, TerminalReason.SUCCESSFUL_IMPLEMENT)
 
     def test_consensus_decision_ready(self):
         msgs = [
-            DeliberationMessage(
-                step=1,
-                sender="codex",
-                role="moderator",
-                content="Direction clarified. Status is DECISION_READY.",
-            )
+            DeliberationMessage(step=index, sender=sender, role="review", content="Approved.",
+                               correlation_id="C-DECISION", decision="DECISION_READY")
+            for index, sender in enumerate(("codex", "claude", "antigravity"), 1)
         ]
-        ctx = AbsenceContext(is_ready=True, agenda="Review", messages=msgs)
+        ctx = AbsenceContext(is_ready=True, agenda="Review", messages=msgs, correlation_id="C-DECISION")
         res = evaluate_transition(AbsenceModeState.RUNNING, ctx)
         self.assertEqual(res.next_state, AbsenceModeState.DECISION_READY)
         self.assertEqual(res.reason, TerminalReason.SUCCESSFUL_DECISION)

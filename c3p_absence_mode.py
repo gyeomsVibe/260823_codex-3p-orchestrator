@@ -60,6 +60,9 @@ class DeliberationMessage:
     sender: str
     role: str  # "moderator" (Codex), "evidence" (Antigravity), "review" (Claude)
     content: str
+    message_type: str = "RESULT"
+    correlation_id: str = ""
+    decision: str = ""
     digest: str = field(default="")
 
     def __post_init__(self) -> None:
@@ -71,6 +74,7 @@ class DeliberationMessage:
 @dataclass
 class AbsenceContext:
     agenda: Optional[str] = None
+    is_budget_saving_active: bool = False
     is_ready: bool = False
     start_time_epoch: float = 0.0
     elapsed_seconds: float = 0.0
@@ -81,6 +85,10 @@ class AbsenceContext:
     explicit_blocked_reason: Optional[str] = None
     max_messages: int = 5
     max_duration_seconds: float = 900.0  # 15 minutes
+    required_approvers: Set[str] = field(
+        default_factory=lambda: {"codex", "claude", "antigravity"}
+    )
+    correlation_id: str = ""
 
 
 @dataclass(frozen=True)
@@ -130,6 +138,30 @@ def can_run_deliberation(is_ready: bool, agenda: Optional[str]) -> bool:
     return bool(is_ready and agenda and agenda.strip())
 
 
+def has_verified_consensus(
+    messages: List[DeliberationMessage],
+    required_approvers: Set[str],
+    correlation_id: str,
+    decision: str,
+) -> bool:
+    """Require a structured RESULT from every expected C3P voter.
+
+    Prose can be evidence but cannot authorize a state transition: each vote
+    must name the same workflow and exact decision.
+    """
+
+    if not correlation_id or not required_approvers:
+        return False
+    approved = {
+        message.sender
+        for message in messages
+        if message.message_type == "RESULT"
+        and message.correlation_id == correlation_id
+        and message.decision == decision
+    }
+    return required_approvers.issubset(approved)
+
+
 def evaluate_transition(
     current_state: AbsenceModeState,
     context: AbsenceContext,
@@ -157,7 +189,7 @@ def evaluate_transition(
 
     # 2. State transition rules
     if current_state == AbsenceModeState.OFF:
-        if can_arm_absence_mode(True):
+        if can_arm_absence_mode(context.is_budget_saving_active):
             return TransitionResult(
                 current_state=current_state,
                 next_state=AbsenceModeState.ARMED,
@@ -222,7 +254,7 @@ def evaluate_transition(
             )
 
         # Check timeout
-        if context.elapsed_seconds > context.max_duration_seconds:
+        if context.elapsed_seconds >= context.max_duration_seconds:
             return TransitionResult(
                 current_state=current_state,
                 next_state=AbsenceModeState.NO_ACTIONABLE_CHANGE,
@@ -232,9 +264,10 @@ def evaluate_transition(
             )
 
         # Check duplicate logical message
-        seen: Set[str] = set()
+        seen: Set[Tuple[str, str]] = set()
         for msg in context.messages:
-            if msg.digest in seen:
+            key = (msg.sender, msg.digest)
+            if key in seen:
                 return TransitionResult(
                     current_state=current_state,
                     next_state=AbsenceModeState.NO_ACTIONABLE_CHANGE,
@@ -242,10 +275,14 @@ def evaluate_transition(
                     details=f"Duplicate argument hash detected: {msg.digest}.",
                     action_required="중복 논의 차단 및 결과 카드 종결",
                 )
-            seen.add(msg.digest)
+            seen.add(key)
 
-        # Check if successful consensus reached
-        if any(msg.role == "moderator" and "IMPLEMENT_READY" in msg.content for msg in context.messages):
+        if has_verified_consensus(
+            context.messages,
+            context.required_approvers,
+            context.correlation_id,
+            AbsenceModeState.IMPLEMENT_READY.value,
+        ):
             return TransitionResult(
                 current_state=current_state,
                 next_state=AbsenceModeState.IMPLEMENT_READY,
@@ -254,7 +291,12 @@ def evaluate_transition(
                 action_required="구현 카드 승인 대기",
             )
 
-        if any(msg.role == "moderator" and "DECISION_READY" in msg.content for msg in context.messages):
+        if has_verified_consensus(
+            context.messages,
+            context.required_approvers,
+            context.correlation_id,
+            AbsenceModeState.DECISION_READY.value,
+        ):
             return TransitionResult(
                 current_state=current_state,
                 next_state=AbsenceModeState.DECISION_READY,

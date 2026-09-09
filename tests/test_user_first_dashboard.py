@@ -225,7 +225,10 @@ class TestPerProjectDashboardActivation(unittest.TestCase):
              mock.patch("csc_dashboard.write_dashboard", return_value=expected):
             result = csc.activate_project(csc.Path(PROJECT_ROOT), timeout=1)
         self.assertEqual(result["dashboard"]["project"], os.path.basename(PROJECT_ROOT))
-        self.assertEqual(result["dashboard"]["path"], expected)
+        self.assertEqual(
+            os.path.normcase(os.path.realpath(result["dashboard"]["path"])),
+            os.path.normcase(os.path.realpath(expected)),
+        )
         self.assertEqual(result["dashboard"]["kind"], "activation_snapshot")
 
     def test_failure_still_writes_dashboard_before_propagating(self):

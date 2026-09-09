@@ -24,6 +24,7 @@ from csc_auth import AuthenticationError, ReplayWindow, verify_envelope
 import csc_storage
 import csc_runtime
 from c3p_trigger import is_budget_saving_trigger, is_user_absence_trigger
+from c3p_absence_state_store import arm_user_absence_mode
 from csc_worker import pid_is_alive
 
 SWARM_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), ".agent-swarm")
@@ -856,7 +857,9 @@ def main():
                     budget_saving=True,
                 )
                 result["trigger"] = args.phrase
-                result["user_absence_mode"] = True
+                result["user_absence_mode"] = arm_user_absence_mode(
+                    Path(__file__).resolve().parent, args.phrase
+                )
                 print(json.dumps(result, ensure_ascii=False, indent=2))
             except (csc_runtime.ActivationError, OSError, RuntimeError) as exc:
                 print(f"❌ [CSC Trigger] {exc}", file=sys.stderr)
