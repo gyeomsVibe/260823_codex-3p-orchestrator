@@ -221,6 +221,15 @@ class TestC3PTriggerContract(unittest.TestCase):
             self.assertIn("C3P_CALL_PHRASE_CONTRACT_V1", content)
             self.assertIn("`C3P 협의체와 검토해줘`", content)
 
+    def test_readme_does_not_claim_phrase_alone_proves_consensus(self):
+        """호출문은 요청이지, 세 도구의 실제 합의 증거가 아니다."""
+        with open(os.path.join(PROJECT_ROOT, "README.md"), encoding="utf-8") as handle:
+            readme = handle.read()
+        self.assertNotIn("즉시 상호 합의 프로토콜", readme)
+        self.assertIn("문구 자체는 세 도구의 연결·회신·합의를 보장하지 않습니다", readme)
+        self.assertIn("`C3P 협의체와 검토해줘`", readme)
+        self.assertIn("회신·정족수 증거가 없으면 합의로 표시하지 않는다", readme)
+
 
 class TestPerProjectDashboardActivation(unittest.TestCase):
     """C3P 발동은 성공·실패 여부와 무관하게 해당 프로젝트 감시판을 남긴다."""
