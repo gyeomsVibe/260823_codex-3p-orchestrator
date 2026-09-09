@@ -58,6 +58,8 @@
 52. `51_C3P_WINDOWS_CONCURRENCY_AND_SOCKET_SUPERVISOR_RESEARCH.md` — Windows 동시성 충돌 방어 및 소켓 감시 슈퍼바이저 심층 연구 보고서
 53. `52_C3P_WINDOWS_CONCURRENCY_HEALING_WALKTHROUGH.md` — C3P 협의체 Windows 동시성 충돌 방어 및 소켓 감시 슈퍼바이저 자가 치유 완결 보고서
 54. `53_사용자_안내_C3P_예산절약_모드_반영_및_Windows_런타임_치유_전과정_종합보고서(c3p_budget_and_runtime_healing_walkthrough).md` — 모르는 걸 모르는 사용자 대상 C3P 예산절약 모드 및 런타임 치유 전과정 종합보고서
+55. `54_C3P_ZERO_TOKEN_AUTO_WATCH_AND_BUDGET_SAVING_SPEC.md` — C3P 협의체 실시간 메시지 감시 자동화 및 예산절약 아키텍처 정본 규격서
+56. `55_[MIA 전략절차] C3P 협의체 실시간 메시지 감시 자동화 및 예산낭비 방지 구현 계획 (implementation_plan).md` — C3P 협의체 실시간 메시지 감시 자동화 및 예산낭비 방지 구현 계획서
 
 ## 운영 규칙
 

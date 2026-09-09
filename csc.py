@@ -712,7 +712,7 @@ def manage_broker(action: str, port: int = DEFAULT_PORT):
         else:
             print("🔴 [CSC Broker] Broker is stopped.")
 
-def activate_project(project_root: Path, timeout: float) -> dict:
+def activate_project(project_root: Path, timeout: float, budget_saving: bool = True) -> dict:
     """C3P 런타임을 발동하고 성공·실패 모두 해당 프로젝트 감시판을 남긴다."""
     import csc_dashboard
 
@@ -723,7 +723,7 @@ def activate_project(project_root: Path, timeout: float) -> dict:
             f"WORKSPACE_MISMATCH: dashboard root={dashboard_root}, activation root={root}"
         )
     try:
-        result = csc_runtime.activate(root, timeout=timeout)
+        result = csc_runtime.activate(root, timeout=timeout, budget_saving=budget_saving)
     except Exception:
         try:
             csc_dashboard.write_dashboard()
@@ -762,7 +762,13 @@ def main():
     # persistent 3P runtime
     activate_parser = subparsers.add_parser("activate", help="Start/reuse broker and two registered CLI adapters")
     activate_parser.add_argument("--timeout", type=float, default=10.0, help="Readiness deadline in seconds")
+    activate_parser.add_argument("--budget-saving", action=argparse.BooleanOptionalAction, default=True, help="Run in zero-token local standby budget-saving mode")
     subparsers.add_parser("roster", help="Show live broker socket registrations")
+
+    watch_parser = subparsers.add_parser("watch", help="Start zero-token real-time message watcher")
+    watch_parser.add_argument("--me", default=os.environ.get("CSC_AGENT_ID", "antigravity"), help="Target agent name to watch for")
+    watch_parser.add_argument("--interval", type=float, default=2.0, help="Check interval in seconds")
+    watch_parser.add_argument("--max-minutes", type=float, default=0.0, help="Max run duration in minutes (0=forever)")
 
     await_parser = subparsers.add_parser("await", help="Observe TASK replies for a bounded window")
     await_parser.add_argument("--task-id", required=True)
@@ -812,7 +818,11 @@ def main():
     elif args.command == "activate":
         init_swarm(False)
         try:
-            result = activate_project(Path(__file__).resolve().parent, timeout=args.timeout)
+            result = activate_project(
+                Path(__file__).resolve().parent,
+                timeout=args.timeout,
+                budget_saving=args.budget_saving,
+            )
             print(json.dumps(result, ensure_ascii=False, indent=2))
         except (csc_runtime.ActivationError, OSError, RuntimeError) as exc:
             print(f"❌ [CSC Activate] {exc}", file=sys.stderr)
@@ -886,6 +896,15 @@ def main():
         else:
             print_report(report)
         sys.exit(report["exit_code"])
+    elif args.command == "watch":
+        import csc_watch
+        sys.argv = [
+            sys.argv[0],
+            "--me", args.me,
+            "--interval", str(args.interval),
+            "--max-minutes", str(args.max_minutes),
+        ]
+        sys.exit(csc_watch.main())
     else:
         parser.print_help()
 

@@ -54,10 +54,12 @@ sequenceDiagram
     participant AGY as 👁️ Antigravity CLI
 
     User->>Codex: "MIA c3p 발동"
-    Codex->>Broker: python csc.py broker start (포트 바인딩)
-    Broker-->>Codex: 포트 할당 완료 (e.g. 8765)
+    Codex->>Broker: python csc.py activate --budget-saving (1회 멱등 헬스체크)
+    Broker-->>Codex: 포트 할당 및 워커 준비 완료 (e.g. 8765, Action: reused/started)
 
-    par 동시 연결 핸드셰이크
+    Note over Broker,AGY: 💤 유휴 상태: 외부 토큰 0원 소모 (Python 소켓 데몬 상시 대기)
+
+    par 동시 연결 및 준비 상태 확인
         Claude->>Broker: REGISTER (Agent: Claude)
         AGY->>Broker: REGISTER (Agent: Antigravity)
     end
@@ -112,7 +114,8 @@ sequenceDiagram
 
 트리거를 받으면 문서상의 연결을 가정하지 말고 프로젝트 루트에서 아래 순서로 실측한다.
 
-1. `python csc.py activate --timeout 15`로 브로커와 두 경량 어댑터를 시작하거나 재사용한다.
+1. `python csc.py activate --budget-saving --timeout 15`로 브로커와 두 경량 어댑터를 시작하거나 0ms에 멱등 재사용한다.
+   - **대기 상태 외부 토큰 0원 (Zero-Token Standby)**: AI 대화창 루프가 아닌 백그라운드 파이썬 데몬이 소켓으로 무비용 대기합니다.
    - **C3P 발동 시 현재 프로젝트 전용 `.agent-swarm/dashboard.html`을 성공·실패 모두 생성**한다.
    - 실행마다 별도 HTML을 늘리지 않고 프로젝트당 한 파일을 갱신한다. 이 파일은 생성 시점의 스냅샷이므로 화면의 `상태 재계산 시각`을 함께 확인한다.
 2. `python csc.py roster` 결과에 `claude`, `antigravity`가 모두 있어야 소켓 연결로 인정한다.

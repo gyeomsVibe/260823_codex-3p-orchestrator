@@ -143,6 +143,18 @@ graph TD
 
 ---
 
+## 2.7. 3대 도구 시작 시 예산낭비 방지 실시간 감시 자동 작동 규약 (Zero-Token Auto-Watch Standard)
+
+> 정본: `docs/54_C3P_ZERO_TOKEN_AUTO_WATCH_AND_BUDGET_SAVING_SPEC.md`
+> 2026-09-09 C3P 협의체 3/3 만장일치 합의 완료.
+
+1. **대기 시 외부 토큰 0원 (Zero-Token Passive Standby, 외부 인공지능 호출 없이 0원으로 조용히 대기하는 원칙).** AI 에이전트(Codex, Claude Code, Antigravity)는 대화창에서 메시지를 기다리기 위해 루프(Loop)를 돌며 명령을 반복 실행(Active Polling)하지 않는다. 감시는 오직 로컬 운영체제의 파이썬 데몬(`RegisteredQueueWorker` 및 소켓 브로커)이 무비용으로 전담한다.
+2. **시작 시 1초 멱등 활성화 (Idempotent 1-Shot Startup Hook, 세션 시작 시 단 한 번 겹침 없이 안전하게 감시자를 켜는 장치).** 3대 도구 중 어느 것이든 새 세션이 시작되거나 사용자가 "c3p 발동"을 호출하면 `python csc.py activate --budget-saving`을 1회 호출한다. 이미 브로커와 워커가 살아있다면 0ms 만에 기존 프로세스를 재사용(`reused`)하여 중복 프로세스 생성을 원천 차단한다.
+3. **컨텍스트 실드 및 로컬 트리아지 (Context Shield & Local Triage, 불필요한 긴 글을 차단하고 로컬에서 먼저 걸러내는 방어벽).** 브로커에 오가는 단순 하트비트, 핑, 머신 이벤트는 로컬 파이썬 및 소형 모델(`qwen2.5-coder:3b`)로 0원에 걸러낸다. 사령관 Codex에는 오직 "3줄 요약 + 핵심 변경점 + 통과 증거" 작업 카드만 전달하여 입력 토큰을 85% 이상 절감한다.
+4. **비대칭 쿼터 사령관 보호 (Asymmetric Quota Commander Shield, 사용량이 적은 사령관의 한도를 아껴주는 보호 체계).** 쿼터가 풍부한 Antigravity가 손과 눈(대변인)으로서 대용량 웹 검색, 파일 전수 스캔, 사전 단위 테스트를 전담하고, 사령관 Codex는 승인과 총괄 지휘에만 최소 토큰을 집중한다.
+
+---
+
 ## 3. GPT 실전 치트키 라우터
 
 - `/SELFREFINE`, `/REDTEAM`, `/ELI10`, `/DEEPDIVE`, `/ALT3`, `/CRITIC`, `/OPTIMIZE`, `/STEPBYSTEP`, `/EXPERT`, `/STRUCTURED-FEW-SHOT`을 프로젝트 작업 절차 트리거로 인식한다.

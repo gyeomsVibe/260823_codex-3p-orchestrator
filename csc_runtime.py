@@ -198,6 +198,7 @@ def activate(
     project_root: os.PathLike[str] | str,
     timeout: float = 10.0,
     poll_interval: float = 0.1,
+    budget_saving: bool = True,
 ) -> Dict[str, Any]:
     root = Path(project_root).resolve()
     (root / ".agent-swarm" / "workers").mkdir(parents=True, exist_ok=True)
@@ -226,6 +227,7 @@ def activate(
                 "broker": broker,
                 "workers": workers,
                 "registered_agents": sorted(expected),
+                "budget_saving_mode": budget_saving,
             }
         # 절반 경과 후에도 미등록된 워커가 있으면 강제 재기동 1회 수행 (Self-Healing)
         if not healed and time.monotonic() > midpoint:
@@ -238,3 +240,46 @@ def activate(
         "activation timed out: expected live socket registrations and fresh heartbeats "
         f"for {sorted(expected)}; last roster={last_roster.get('registered_agents', [])}"
     )
+
+
+def reconcile_declarations(project_root: os.PathLike[str] | str) -> Dict[str, Any]:
+    """Reconciles stale status metadata with actual OS process liveness."""
+    from csc_process import probe_pid
+    root = Path(project_root).resolve()
+    swarm = root / ".agent-swarm"
+    changes: list[str] = []
+
+    # 1. Broker reconciliation
+    broker_path = swarm / "broker.json"
+    if broker_path.is_file():
+        try:
+            b = json.loads(broker_path.read_text(encoding="utf-8"))
+            if str(b.get("status", "")).upper() == "RUNNING":
+                pid = b.get("pid")
+                if isinstance(pid, int) and probe_pid(pid) == "gone":
+                    b["status"] = "STOPPED"
+                    b["stopped_at"] = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
+                    broker_path.write_text(json.dumps(b, indent=2, ensure_ascii=False), encoding="utf-8")
+                    changes.append("broker.json: RUNNING -> STOPPED (PID gone)")
+        except Exception:
+            pass
+
+    # 2. Worker reconciliation
+    workers_dir = swarm / "workers"
+    if workers_dir.is_dir():
+        for f in workers_dir.iterdir():
+            if not f.name.endswith(".json") or f.name.endswith(".cursor.json"):
+                continue
+            try:
+                w = json.loads(f.read_text(encoding="utf-8"))
+                if str(w.get("status", "")) == "ready":
+                    pid = w.get("pid")
+                    if isinstance(pid, int) and probe_pid(pid) == "gone":
+                        w["status"] = "stopped"
+                        w["stopped_at"] = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
+                        f.write_text(json.dumps(w, indent=2, ensure_ascii=False), encoding="utf-8")
+                        changes.append(f"{f.name}: ready -> stopped (PID gone)")
+            except Exception:
+                pass
+
+    return {"reconciled": changes, "count": len(changes)}
