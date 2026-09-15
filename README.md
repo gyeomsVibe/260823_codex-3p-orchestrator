@@ -10,7 +10,6 @@ Codex가 지휘하고 Antigravity를 작업자로 쓰는 개인 AI 작업 체계
 |---|---|---|
 | 지휘 | Codex | 계획, 위임, 결과 검증, 사용자 보고 |
 | 작업자 | Antigravity (`agy` CLI) | Codex가 맡긴 탐색·조사·테스트·화면 확인 |
-| 분리 | Claude Code | 이 체계와 무관하게 따로 사용 |
 
 ## 연결 방식
 
@@ -24,9 +23,7 @@ Codex가 지휘하고 Antigravity를 작업자로 쓰는 개인 AI 작업 체계
 |---|---|
 | `AGENTS.md` | Codex 지휘·위임·승인 규칙 |
 | `GEMINI.md` | Antigravity 작업자 규칙 |
-| `CLAUDE.md` | Claude Code 비참여 선언 |
 | `docs/C3P_RETIREMENT_DECISION.md` | 해체 결정의 근거와 제거 목록 |
-| `archive/` | 해체 시점에 커밋되지 않았던 Codex 변경 패치와 미추적 문서 |
 
 ## 이전 체계 보기·복구
 

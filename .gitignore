@@ -23,7 +23,6 @@ Thumbs.db
 # Local scratch and retired C3P runtime leftovers
 scratch_*
 .agent-swarm/
-.claude/hooks/.state/
 .codex-remote-attachments/
 .gemini/
 .vibe-clinic/
