@@ -1,4 +1,4 @@
-# Secrets & Credentials
+# Secrets
 .env
 .env.*
 *.pem
@@ -6,75 +6,24 @@
 *.p12
 *.pfx
 
-# Python caches
+# Caches
 __pycache__/
 *.py[cod]
-*$py.class
 .pytest_cache/
-.coverage
-htmlcov/
-*.egg-info/
-dist/
-build/
-
-# Node / JS
 node_modules/
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
 
-# IDE & OS temporary files
+# IDE / OS
 .vscode/
 .idea/
 .DS_Store
 Thumbs.db
 *.tmp
-*.temp
-
-# CSC swarm hook 로컬 상태 (커밋 대상 아님)
-.claude/hooks/.state/
-
-# CSC runtime evidence/state (machine-local, regenerated)
-.agent-swarm/broker.json
-.agent-swarm/logs/
-.agent-swarm/workers/
-.agent-swarm/locks/
-.agent-swarm/coordination/
-.agent-swarm/messages/*.jsonl
-.agent-swarm/watchers/
-.agent-swarm/telemetry/
-.agent-swarm/scripts/
-.agent-swarm/BUILD_PHASE
-.agent-swarm/dead-letter/
-# 수직 슬라이스 실험용 SQLite. 재생성 가능한 산출물이다.
-.agent-swarm/slice.db
-
-# 작업 중 만든 로컬 백업본
 *.bak
 
-# 뷰어 산출물 (재생성 가능)
-.agent-swarm/conversation.html
-
-# 사용자 대시보드 산출물 (훅이 자동 재생성)
-.agent-swarm/dashboard.html
-
-# 주장 감사 기록 (런타임 로그, 재생성 가능)
-.agent-swarm/messages/claim_audit.jsonl
-
-# 점호 흔적 로그 (런타임 기록, 재생성 가능)
-.agent-swarm/rollcall.log
-.vibe-clinic/config.json
-.vibe-clinic/treatment-ledger.json
-
-# 진단 실행 기록 (런타임, 재생성 가능)
-.agent-swarm/clinic_runs.jsonl
-.agent-swarm/clinic_reports/
-
-# 스크래치 및 임시 파일
+# Local scratch and retired C3P runtime leftovers
 scratch_*
+.agent-swarm/
+.claude/hooks/.state/
 .codex-remote-attachments/
 .gemini/
-.vibe-clinic/*
-!.vibe-clinic/diagnostics/
-!.vibe-clinic/diagnostics/*.js
-!.vibe-clinic/diagnostics/README.md
+.vibe-clinic/
