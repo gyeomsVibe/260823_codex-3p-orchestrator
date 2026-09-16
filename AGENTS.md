@@ -26,7 +26,8 @@
 ## 샌드박스 운용
 
 - 기본은 `workspace-write` 상시 적용이다. 샌드박스 안에서는 `.git` 쓰기가 설계상 거부되므로 커밋·푸시는 샌드박스 밖에서 한다.
-- 거부가 나면 먼저 `pwsh -NoProfile -File tools\codex-sandbox-acl.ps1`로 권한 찌꺼기를 확인한다. 예약 작업 `CodexSandboxAclCleanup`이 30분마다 자동 정리한다.
+- 커밋·푸시는 `codex --profile gitops`로 한다. 샌드박스 계정은 `.git` 쓰기가 거부되고, 청소는 다음 실행까지만 유효하다.
+- 그 밖의 거부는 `pwsh -NoProfile -File tools\codex-sandbox-acl.ps1`로 권한 찌꺼기를 확인한다. 예약 작업 `CodexSandboxAclCleanup`이 30분마다 자동 정리한다.
 - 설계와 선택지는 `docs/260916_샌드박스_상시운용_설계.md`를 따른다.
 
 ## 보고
