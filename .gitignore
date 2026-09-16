@@ -24,6 +24,7 @@ Thumbs.db
 scratch_*
 .agent-swarm/
 .codex-remote-attachments/
+.codex-sandbox-maintenance/
 .gemini/
 .vibe-clinic/
 

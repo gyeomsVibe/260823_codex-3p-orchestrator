@@ -1,0 +1,19 @@
+# Git commands that need protected .git or network access must cross the sandbox
+# through the approval reviewer instead of weakening workspace isolation.
+prefix_rule(
+    pattern = ["git", ["add", "commit", "fetch", "pull", "push"]],
+    decision = "prompt",
+    justification = "Git metadata or remote side effects require boundary review",
+    match = [
+        "git add README.md",
+        "git commit -m update",
+        "git fetch origin",
+        "git pull --ff-only",
+        "git push origin main",
+    ],
+    not_match = [
+        "git status --short",
+        "git diff --check",
+        "git log -1",
+    ],
+)

@@ -24,6 +24,7 @@ Codex가 지휘하고 Antigravity를 작업자로 쓰는 개인 AI 작업 체계
 | `AGENTS.md` | Codex 지휘·위임·승인 규칙 |
 | `GEMINI.md` | Antigravity 작업자 규칙 |
 | [`docs/260916_Codex_Windows_샌드박스_영구복구_사용자가이드.md`](docs/260916_Codex_Windows_샌드박스_영구복구_사용자가이드.md) | Windows 샌드박스 복구 과정과 지속 운용 방법 |
+| [`docs/260916_Codex_Windows_업데이트후_샌드박스_자동검증_가이드.md`](docs/260916_Codex_Windows_업데이트후_샌드박스_자동검증_가이드.md) | Codex·Windows 업데이트 감지와 자동 재검증 방법 |
 | [`docs/README.md`](docs/README.md) | 전체 문서 읽기 순서와 시간순 색인 |
 | `docs/C3P_RETIREMENT_DECISION.md` | 해체 결정의 근거와 제거 목록 |
 
