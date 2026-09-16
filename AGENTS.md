@@ -19,15 +19,19 @@
 
 ## 승인 경계
 
-- 비대화형 실행(codex exec)은 승인을 묻지 않고 샌드박스 기본값이 전체 접근이다. 반드시 `--sandbox workspace-write`를 함께 준다. 설정 파일 값은 이때 적용되지 않는다(2026-09-16 실측).
+- 기본 권한은 사용자 설정의 `default_permissions = ":workspace"`, 승인은 `on-request`, 검토자는 `auto_review`다.
+- 권한 프로필을 사용할 때 `--sandbox`를 함께 주지 않는다. 이 플래그는 레거시 샌드박스 설정을 강제로 선택한다.
 - 커밋·푸시·삭제·설치·인증/환경변수 변경은 매번 사용자 승인을 받는다.
 - 한 번의 승인을 다른 작업이나 다른 도구로 상속하지 않는다.
 
 ## 샌드박스 운용
 
-- 기본은 `workspace-write` 상시 적용이다. 샌드박스 안에서는 `.git` 쓰기가 설계상 거부되므로 커밋·푸시는 샌드박스 밖에서 한다.
-- 커밋·푸시는 `codex --profile gitops`로 한다. 샌드박스 계정은 `.git` 쓰기가 거부되고, 청소는 다음 실행까지만 유효하다.
-- 그 밖의 거부는 `pwsh -NoProfile -File tools\codex-sandbox-acl.ps1`로 권한 찌꺼기를 확인한다. 예약 작업 `CodexSandboxAclCleanup`이 30분마다 자동 정리한다.
+- 기본은 내장 `:workspace` 권한 프로필이다. 샌드박스 안에서는 `.git` 쓰기가 설계상 거부되므로 필요한 Git 쓰기는 승인 경계에서 실행한다.
+- `gitops` 전체 접근 프로필은 일반 작업의 기본값으로 쓰지 않는다. 커밋·푸시는 사용자 승인을 받은 뒤 현재 작업의 명시 경로만 대상으로 실행한다.
+- 사용자 규칙 `sandbox-git-boundary.rules`는 `git add/commit/fetch/pull/push`를 `prompt`로 분류한다. 규칙이 프로젝트의 사용자 승인 요구를 대신하지 않는다.
+- `pwsh -NoProfile -File tools\codex-sandbox-acl.ps1`은 읽기 전용 진단이다. SID 문자열이나 `Account Unknown` 표시는 삭제 가능한 고아 권한의 증거가 아니다.
+- 이전 이름을 유지한 예약 작업 `CodexSandboxAclCleanup`도 30분마다 읽기 전용 점검만 한다. 자동 ACL 삭제는 금지한다.
+- 경계 회귀 검사는 `pwsh -NoProfile -File tools\test-codex-sandbox-profile.ps1`로 실행한다.
 - 설계와 선택지는 `docs/260916_샌드박스_상시운용_설계.md`를 따른다.
 
 ## 보고

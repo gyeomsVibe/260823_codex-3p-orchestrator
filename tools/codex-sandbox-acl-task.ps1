@@ -1,7 +1,8 @@
 <#
-  스케줄러 전용 실행기. 작업 폴더 안의 Git 저장소를 자동으로 찾아 codex-sandbox-acl.ps1 -Mode Clean 을 돌린다.
+  스케줄러 전용 읽기 전용 감사 실행기. 작업 폴더 안의 Git 저장소를 자동으로 찾아
+  codex-sandbox-acl.ps1 -Mode Check 를 돌린다.
   새 저장소를 만들어도 따로 등록할 필요가 없다.
-  등록 예: schtasks /Create /TN CodexSandboxAclCleanup /TR "pwsh.exe -NoProfile -File <이 파일>" /SC MINUTE /MO 30 /F
+  기존 예약 작업 이름 CodexSandboxAclCleanup은 호환을 위해 유지되지만 ACL을 정리하지 않는다.
 #>
 [CmdletBinding()]
 param(
@@ -20,5 +21,5 @@ Get-ChildItem -LiteralPath $WorkspaceRoot -Directory -Depth ($MaxDepth - 1) -Err
     ForEach-Object { $repos.Add($_.FullName) }
 
 if ($repos.Count -eq 0) { exit 0 }
-& $cleaner -Mode Clean -Paths $repos.ToArray()
+& $cleaner -Mode Check -Paths $repos.ToArray()
 exit $LASTEXITCODE
