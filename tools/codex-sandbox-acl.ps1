@@ -68,7 +68,7 @@ foreach ($t in $targets) {
 
 $stamp = (Get-Date).ToString('yyyy-MM-dd HH:mm:ss')
 $line = "$stamp mode=$Mode targets=$($targets.Count) stale=$staleTotal deny=$denyTotal"
-try { Add-Content -LiteralPath $LogPath -Value $line -Encoding UTF8 } catch { }
+try { Add-Content -LiteralPath $LogPath -Value $line -Encoding UTF8 } catch { Write-Output "log write failed: $($_.Exception.Message)" }
 
 if ($Mode -eq 'Check' -and $staleTotal -gt 0) {
     Write-Output ''
