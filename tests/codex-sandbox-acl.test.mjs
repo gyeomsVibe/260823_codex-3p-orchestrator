@@ -8,6 +8,7 @@ import test from "node:test";
 
 const repoRoot = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const taskScript = join(repoRoot, "tools", "codex-sandbox-acl-task.ps1");
+const taskWrapper = join(repoRoot, "tools", "codex-sandbox-acl-task.cmd");
 const cleaner = join(repoRoot, "tools", "codex-sandbox-acl.ps1");
 const gitIgnoreSync = join(repoRoot, "tools", "sync-codex-git-ignore.ps1");
 
@@ -17,11 +18,36 @@ test("scheduled task audits ACLs without deleting entries", () => {
   assert.doesNotMatch(source, /&\s+\$cleaner\s+-Mode\s+Clean\b/);
 });
 
+test("scheduled task wrapper preserves the PowerShell exit code", () => {
+  const source = readFileSync(taskWrapper, "utf8");
+  assert.match(source, /set\s+"TASK_EXIT=%ERRORLEVEL%"/i);
+  assert.match(source, /exit\s+\/b\s+%TASK_EXIT%/i);
+});
+
 test("ACL auditor contains no mutation primitive", () => {
   const source = readFileSync(cleaner, "utf8");
   assert.doesNotMatch(source, /\bSet-Acl\b/i);
   assert.doesNotMatch(source, /\bRemoveAccessRule/i);
   assert.doesNotMatch(source, /\bicacls(?:\.exe)?\b/i);
+});
+
+test("ACL findings are audit data rather than a task failure", () => {
+  const fixture = mkdtempSync(join(tmpdir(), "codex-acl-audit-"));
+  try {
+    const result = spawnSync("pwsh", [
+      "-NoProfile",
+      "-File",
+      cleaner,
+      "-Mode",
+      "Check",
+      "-Paths",
+      fixture,
+    ], { encoding: "utf8" });
+
+    assert.equal(result.status, 0, result.stdout + result.stderr);
+  } finally {
+    rmSync(fixture, { recursive: true, force: true });
+  }
 });
 
 test("legacy Clean mode refuses to mutate ACLs", () => {

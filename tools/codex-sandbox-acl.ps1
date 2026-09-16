@@ -8,7 +8,7 @@
   따라서 이 도구는 ACL을 수정하지 않고 후보를 Codex ledger 등록 여부와 함께 집계한다.
 
 .PARAMETER Mode
-  Check  명시적인 S-1-5-21-* 권한 항목 수를 보고한다(기본값). 1건이라도 있으면 종료 코드 1.
+  Check  명시적인 S-1-5-21-* 권한 항목 수를 보고한다(기본값). 감사에 성공하면 종료 코드 0.
   Clean  안전성 검증이 되지 않은 이전 호환 인수다. ACL을 바꾸지 않고 종료 코드 3으로 거부한다.
 
 .PARAMETER Paths
@@ -107,7 +107,6 @@ try { Add-Content -LiteralPath $LogPath -Value $line -Encoding UTF8 } catch { Wr
 if ($candidateTotal -gt 0) {
     Write-Output ''
     Write-Output 'SID 후보는 삭제 지시가 아니다. ledger 등록 여부와 별도 장애 증거를 확인하라.'
-    exit 1
 }
 
 exit 0
