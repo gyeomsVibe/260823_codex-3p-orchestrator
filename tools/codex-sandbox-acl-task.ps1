@@ -11,8 +11,12 @@ param(
 )
 
 $ErrorActionPreference = 'Continue'
+$gitIgnoreSync = Join-Path $PSScriptRoot 'sync-codex-git-ignore.ps1'
 $cleaner = Join-Path $PSScriptRoot 'codex-sandbox-acl.ps1'
-if (-not (Test-Path -LiteralPath $cleaner)) { exit 2 }
+if (-not (Test-Path -LiteralPath $cleaner) -or -not (Test-Path -LiteralPath $gitIgnoreSync)) { exit 2 }
+
+& $gitIgnoreSync
+if ($LASTEXITCODE -ne 0) { exit 2 }
 
 $repos = New-Object System.Collections.Generic.List[string]
 if (Test-Path -LiteralPath (Join-Path $WorkspaceRoot '.git')) { $repos.Add($WorkspaceRoot) }
